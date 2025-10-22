@@ -1,0 +1,7 @@
+.Trash*
+.fseventsd/
+.idea/
+.metadata_never_index
+System Volume Information/
+sd/
+.vscode/
