@@ -1,25 +1,55 @@
-# Write your code here :-)
-import sys
-
-import board
-import digitalio
+# pylint: disable = import-error, no-member
 import time
+import board
+import neopixel
 
-led = digitalio.DigitalInOut(board.LED)
-led.direction = digitalio.Direction.OUTPUT
+strip = neopixel.NeoPixel(board.GP16, 30, brightness=0.05)
 
-DEBUG_PRINT = False
+print("rgb-pico is running")
 
-def print_debug(msg: str) -> None:
-    if DEBUG_PRINT:
-        print(msg)
+strip.fill((0, 0, 0))
+
+
+rgb = [0, 0, 0]
+r = False
+g = False
+b = False
+loop = False
+eepy = 0.002
 
 while True:
-    print_debug("About to turn the LED on")
-    led.value = True
-    time.sleep(0.1)
-    print("LED on")
-    led.value = False
-    time.sleep(0.1)
-    print_debug("About to turn the LED off")
-    print("Hello world!")
+    while not r:
+        if rgb[0] < 255:
+            rgb[0] = rgb[0] + 1
+        elif rgb[0] == 255:
+            r = True
+        strip.fill(tuple(rgb))
+        time.sleep(eepy)
+    while not g:
+        if rgb[1] < 255:
+            rgb[1] = rgb[1] + 1
+            rgb[0] = rgb[0] - 1
+        elif rgb[1] == 255:
+            g = True
+        strip.fill(tuple(rgb))
+        time.sleep(eepy)
+    while not b:
+        if rgb[2] < 255:
+            rgb[2] = rgb[2] + 1
+            rgb[1] = rgb[1] - 1
+        elif rgb[2] == 255:
+            b = True
+        strip.fill(tuple(rgb))
+        time.sleep(eepy)
+    while not loop:
+        if rgb[0] < 255:
+            rgb[2] = rgb[2] - 1
+            rgb[0] = rgb[0] + 1
+        elif rgb[0] == 255:
+            loop = True
+        strip.fill(tuple(rgb))
+        time.sleep(eepy)
+    r = False
+    g = False
+    b = False
+    loop = False
