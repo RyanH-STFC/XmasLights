@@ -3,7 +3,7 @@ import time
 import board
 import neopixel
 
-strip = neopixel.NeoPixel(board.GP16, 30, brightness=0.02)
+strip = neopixel.NeoPixel(board.GP16, 30, brightness=0.05)
 
 print("rgb-pico is running")
 
@@ -15,7 +15,7 @@ r = False
 g = False
 b = False
 loop = False
-eepy = 0.005
+eepy = 0.002
 
 while True:
     while not r:
@@ -23,7 +23,7 @@ while True:
             rgb[0] = rgb[0] + 1
         elif rgb[0] == 255:
             r = True
-        print(tuple(rgb))
+        strip.fill(tuple(rgb))
         time.sleep(eepy)
     while not g:
         if rgb[1] < 255:
@@ -31,7 +31,7 @@ while True:
             rgb[0] = rgb[0] - 1
         elif rgb[1] == 255:
             g = True
-        print(tuple(rgb))
+        strip.fill(tuple(rgb))
         time.sleep(eepy)
     while not b:
         if rgb[2] < 255:
@@ -39,7 +39,7 @@ while True:
             rgb[1] = rgb[1] - 1
         elif rgb[2] == 255:
             b = True
-        print(tuple(rgb))
+        strip.fill(tuple(rgb))
         time.sleep(eepy)
     while not loop:
         if rgb[0] < 255:
@@ -47,7 +47,7 @@ while True:
             rgb[0] = rgb[0] + 1
         elif rgb[0] == 255:
             loop = True
-        print(tuple(rgb))
+        strip.fill(tuple(rgb))
         time.sleep(eepy)
     r = False
     g = False
