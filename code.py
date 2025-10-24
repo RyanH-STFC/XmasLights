@@ -7,10 +7,45 @@ strip = neopixel.NeoPixel(board.GP16, 30, brightness=0.05)
 
 print("rgb-pico is running")
 
-strip.fill((0, 0, 0))
-
-
 rgb = [0, 0, 0]
+
+
+def rainbow_cycle(
+    strip,
+    delay: float = 0.002,
+) -> bool:
+
+    def running_function(
+        increment_index: int = None,
+        decrement_index: int = None,
+    ) -> None:
+
+        for i in range(255):
+            if increment_index is not None:
+                rgb[increment_index] += 1
+            if decrement_index is not None:
+                rgb[decrement_index] -= 1
+
+            print(rgb)
+            strip.fill(tuple(rgb))
+            time.sleep(delay)
+
+    if all(0 <= element <= 254 for element in rgb):
+        print("Return false")
+        return False
+    else:
+        running_function()
+        return True
+
+
+while True:
+    if not rainbow_cycle(strip):
+        break
+    print("LOOPING MAIN LOOP")
+    print(rainbow_cycle(strip))
+    rainbow_cycle(strip, 1)
+
+
 r = False
 g = False
 b = False
