@@ -6,16 +6,21 @@ import neopixel
 
 strip = neopixel.NeoPixel(board.GP16, 30, brightness=0.05)
 rgb = [255, 0, 0]
-DEBUG_PRINT = False
+DEBUG_PRINT = True
 
 
-def debug_print(msg: str, new_line: bool = True, *args) -> None:
+def debug_print(msg: str, *args, new_line: bool = True) -> None:
+    """
+    Print debug message with optional formatting and line control
+
+    :param msg: Message template to format
+    :param args: Arguments to format into the message
+    :param new_line: Whether to add a new line (default True)
+    """
     formatted_msg = msg.format(*args)
     if DEBUG_PRINT:
-        if new_line:
-            print(formatted_msg, "\n")
-        else:
-            print(formatted_msg)
+        end_char = "\n" if new_line else ""
+        print(formatted_msg, end=end_char)
 
 
 def rainbow_cycle(delay: float = 0.002) -> bool:
@@ -25,7 +30,7 @@ def rainbow_cycle(delay: float = 0.002) -> bool:
         decrement_index: int = None,
     ) -> None:
 
-        for i in range(255):
+        for _ in range(255):
             if increment_index is not None:
                 rgb[increment_index] += 1
             if decrement_index is not None:
