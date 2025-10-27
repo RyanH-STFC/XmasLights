@@ -3,17 +3,22 @@ import time
 import board
 import neopixel
 
+
 strip = neopixel.NeoPixel(board.GP16, 30, brightness=0.05)
-
-print("rgb-pico is running")
-
-rgb = [0, 0, 0]
+rgb = [255, 0, 0]
+DEBUG_PRINT = False
 
 
-def rainbow_cycle(
-    strip,
-    delay: float = 0.002,
-) -> bool:
+def debug_print(msg: str, new_line: bool = True, *args) -> None:
+    formatted_msg = msg.format(*args)
+    if DEBUG_PRINT:
+        if new_line:
+            print(formatted_msg, "\n")
+        else:
+            print(formatted_msg)
+
+
+def rainbow_cycle(delay: float = 0.002) -> bool:
 
     def running_function(
         increment_index: int = None,
@@ -26,65 +31,24 @@ def rainbow_cycle(
             if decrement_index is not None:
                 rgb[decrement_index] -= 1
 
-            print(rgb)
+            debug_print("Red:{} Green:{} Blue:{}".format(*rgb), False)
+
             strip.fill(tuple(rgb))
             time.sleep(delay)
 
-    if all(0 <= element <= 254 for element in rgb):
-        print("Return false")
+    if all(0 <= element < 255 for element in rgb):
+        debug_print("ONE OF THE RGB VALUES WENT OUT OF BOUNDS", True, rgb)
         return False
     else:
-        running_function()
+        debug_print("BEGINNING OF RAINBOW CYCLE: (1/2)")
+        running_function(1, 0)
+        running_function(2, 1)
+        running_function(0, 2)
+        debug_print("END OF RAINBOW CYCLE: (2/2)")
         return True
 
 
 while True:
-    if not rainbow_cycle(strip):
+    debug_print("BEGINNING OF MAIN WHILE LOOP")
+    if not rainbow_cycle():
         break
-    print("LOOPING MAIN LOOP")
-    print(rainbow_cycle(strip))
-    rainbow_cycle(strip, 1)
-
-
-r = False
-g = False
-b = False
-loop = False
-eepy = 0.002
-
-while True:
-    while not r:
-        if rgb[0] < 255:
-            rgb[0] = rgb[0] + 1
-        elif rgb[0] == 255:
-            r = True
-        strip.fill(tuple(rgb))
-        time.sleep(eepy)
-    while not g:
-        if rgb[1] < 255:
-            rgb[1] = rgb[1] + 1
-            rgb[0] = rgb[0] - 1
-        elif rgb[1] == 255:
-            g = True
-        strip.fill(tuple(rgb))
-        time.sleep(eepy)
-    while not b:
-        if rgb[2] < 255:
-            rgb[2] = rgb[2] + 1
-            rgb[1] = rgb[1] - 1
-        elif rgb[2] == 255:
-            b = True
-        strip.fill(tuple(rgb))
-        time.sleep(eepy)
-    while not loop:
-        if rgb[0] < 255:
-            rgb[2] = rgb[2] - 1
-            rgb[0] = rgb[0] + 1
-        elif rgb[0] == 255:
-            loop = True
-        strip.fill(tuple(rgb))
-        time.sleep(eepy)
-    r = False
-    g = False
-    b = False
-    loop = False
