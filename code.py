@@ -2,7 +2,7 @@
 Script for raspberry pi pico to change neopixel lights on pin GP16
 """
 
-# pylint: disable = import-error, no-member
+# pylint: disable = import-error, no-member, no-else-return
 import time
 import board
 import neopixel
@@ -13,25 +13,27 @@ rgb = [255, 0, 0]
 DEBUG_PRINT = True
 
 
-def debug_print(msg: str, *args, new_line: bool = True) -> None:
+def debug_print(msg: str, new_line: bool = True) -> None:
     """
     A function that prints messages to stdout. for debugging purposes.
-    :param msg: the message to print
-    :param args: Typically the var you to show in the message
-    :param new_line: to create a space underneath the message
+
+    :param msg: The message to print
+    :param new_line: Bool value, True to create a space underneath the message, default is True
     :return: None
     """
-    formatted_msg = msg.format(*args)
     if DEBUG_PRINT:
-        end_char = "\n" if new_line else ""
-        print(formatted_msg, end=end_char)
+        if new_line:
+            print(msg, "\n")
+        else:
+            print(msg)
 
 
 def rainbow_cycle(delay: float = 0.002) -> bool:
     """
     Main function for rainbow cycle.
-    checks to see if any of the values in rgb are out side of the range of 0 - 255
+    checks to see if any of the values in rgb are outside the range of 0 - 255
     if not then it runs running_function
+
     :param delay: delay between changing the values of rgb (speed at which the colours change)
     :return: True if it worked, False otherwise
     """
@@ -42,6 +44,7 @@ def rainbow_cycle(delay: float = 0.002) -> bool:
     ) -> None:
         """
         The function that actually changes the colours of the LEDs
+
         :param increment_index: the index of rgb to be incremented by 1 each loop
         :param decrement_index: the index of rgb to be decremented by 1 each loop
         :return: None
@@ -57,21 +60,17 @@ def rainbow_cycle(delay: float = 0.002) -> bool:
             strip.fill(tuple(rgb))
             time.sleep(delay)
 
-    # RGB = [10, 0, 0]
-
     if all(0 <= element < 255 for element in rgb):
-        debug_print("ONE OF THE RGB VALUES WENT OUT OF BOUNDS", True, rgb)
+        debug_print(f"ONE OF THE RGB VALUES WENT OUT OF BOUNDS {rgb}", True)
         return False
 
-    if not all(0 <= element < 255 for element in rgb):
+    else:
         debug_print("BEGINNING OF RAINBOW CYCLE: (1/2)")
         running_function(1, 0)
         running_function(2, 1)
         running_function(0, 2)
         debug_print("END OF RAINBOW CYCLE: (2/2)")
         return True
-
-    return False
 
 
 while True:
