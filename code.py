@@ -38,7 +38,7 @@ def print_rgb() -> None:
 
     :return: None
     """
-    debug_print("Red:{} Green:{} Blue:{}".format(*rgb), False)
+    debug_print(f"Red:{rgb[0]} Green:{rgb[1]} Blue:{rgb[2]}", False)
 
 
 def rainbow_cycle(delay: float = 0.002) -> bool:
@@ -166,26 +166,34 @@ def rainbow_wave(delay: float = 0.002) -> None:
         running_function(colour_sequence[i], colour_sequence[i + 1], NUM_PIXELS)
     debug_print("WAVE FINISHED (2/2)")
 
-def sparkle_pixels(speed=0.05):
+
+def sparkle_pixels(speed: float = 0.1, colour=(255,255,255), intensity: float = 0.33) -> None:
     """
     Create a sparkling effect on Neopixel strip
 
     :param speed: Time between brightness changes
+    :param colour: Tuple[int, int, int]     RGB colour. default is white
+    :param intensity: percentage of pixels to light up
+
     """
     debug_print("sparkling")
-    # Select a random pixel
-    pixel_index = random.randint(0, len(strip) - 1)
+
+    # {5: (0,10,50), 10: (0,255,0)}
 
     # Randomly increase or decrease brightness
     if random.random() > 0.5:
-        strip[pixel_index] = (255, 255, 255)
+        pixel_dict = {}
+        for i in range(random.randint(round((NUM_PIXELS*intensity)/2), round(NUM_PIXELS*intensity))):
+            random_pixel = random.randint(0, NUM_PIXELS - 1)
+            pixel_dict[random_pixel] = colour
+
+        update_multiple_pixels(strip, pixel_dict)
+
         time.sleep(speed)
-        strip[pixel_index] = (0, 0, 0)
-    else:
-        strip[pixel_index] = (0, 0, 0)
+        strip.fill((0, 0, 0))
 
     # Short pause
-    time.sleep(speed)
+
 
 while True:
     # debug_print("Turning pixels black")
@@ -194,5 +202,6 @@ while True:
 
     debug_print("BEGINNING OF PIXEL SEQUENCE")
 
-    rainbow_wave(0.03)
+    sparkle_pixels(colour=(255, 200, 50))
+    # rainbow_wave(0.03)
     # rainbow_cycle()
