@@ -3,6 +3,7 @@ Script for raspberry pi pico to change neopixel lights on pin GP16
 """
 
 # pylint: disable = import-error, no-member, no-else-return
+import random
 import time
 import board
 import neopixel
@@ -12,6 +13,7 @@ NUM_PIXELS = 30
 PIXEL_BRIGHTNESS = 0.05
 
 strip = neopixel.NeoPixel(PIXEL_PIN, NUM_PIXELS, brightness=PIXEL_BRIGHTNESS)
+
 rgb = [255, 0, 0]
 DEBUG_PRINT = True
 
@@ -28,6 +30,15 @@ def debug_print(msg: str, new_line: bool = True) -> None:
         print(msg, "\n")
     elif DEBUG_PRINT:
         print(msg)
+
+
+def print_rgb() -> None:
+    """
+    prints rgb values in format "Red:{} Green:{} Blue:{}"
+
+    :return: None
+    """
+    debug_print("Red:{} Green:{} Blue:{}".format(*rgb), False)
 
 
 def rainbow_cycle(delay: float = 0.002) -> bool:
@@ -57,7 +68,7 @@ def rainbow_cycle(delay: float = 0.002) -> bool:
             if decrement_index is not None:
                 rgb[decrement_index] -= 1
 
-            debug_print(f"Red:{rgb[0]} Green:{rgb[1]} Blue:{rgb[2]}", False)
+            print_rgb()
 
             strip.fill(tuple(rgb))
             time.sleep(delay)
@@ -155,6 +166,26 @@ def rainbow_wave(delay: float = 0.002) -> None:
         running_function(colour_sequence[i], colour_sequence[i + 1], NUM_PIXELS)
     debug_print("WAVE FINISHED (2/2)")
 
+def sparkle_pixels(speed=0.05):
+    """
+    Create a sparkling effect on Neopixel strip
+
+    :param speed: Time between brightness changes
+    """
+    debug_print("sparkling")
+    # Select a random pixel
+    pixel_index = random.randint(0, len(strip) - 1)
+
+    # Randomly increase or decrease brightness
+    if random.random() > 0.5:
+        strip[pixel_index] = (255, 255, 255)
+        time.sleep(speed)
+        strip[pixel_index] = (0, 0, 0)
+    else:
+        strip[pixel_index] = (0, 0, 0)
+
+    # Short pause
+    time.sleep(speed)
 
 while True:
     # debug_print("Turning pixels black")
