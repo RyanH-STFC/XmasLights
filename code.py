@@ -15,6 +15,7 @@ strip = neopixel.NeoPixel(PIXEL_PIN, NUM_PIXELS, brightness=PIXEL_BRIGHTNESS)
 rgb = [255, 0, 0]
 DEBUG_PRINT = True
 
+
 def debug_print(msg: str, new_line: bool = True) -> None:
     """
     A function that prints messages to stdout. for debugging purposes.
@@ -26,7 +27,7 @@ def debug_print(msg: str, new_line: bool = True) -> None:
     if DEBUG_PRINT & new_line:
         print(msg, "\n")
     elif DEBUG_PRINT:
-            print(msg)
+        print(msg)
 
 
 def rainbow_cycle(delay: float = 0.002) -> bool:
@@ -73,11 +74,8 @@ def rainbow_cycle(delay: float = 0.002) -> bool:
         debug_print("END OF RAINBOW CYCLE: (2/2)")
         return True
 
-def update_multiple_pixels(
-    pixels,
-    updates,
-    delay: float = 0
-) -> None:
+
+def update_multiple_pixels(pixels, updates, delay: float = 0) -> None:
     """
     Takes in the strip of LED's and updates each LED's colour value
     based on the value of the key given
@@ -154,8 +152,9 @@ def rainbow_wave(delay: float = 0.002) -> None:
 
     debug_print("WAVE STARTED (1/2)")
     for i in range(len(colour_sequence) - 1):
-        running_function(colour_sequence[i], colour_sequence[i+1], NUM_PIXELS)
+        running_function(colour_sequence[i], colour_sequence[i + 1], NUM_PIXELS)
     debug_print("WAVE FINISHED (2/2)")
+
 
 while True:
     # debug_print("Turning pixels black")
