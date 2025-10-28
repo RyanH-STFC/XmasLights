@@ -115,14 +115,12 @@ def rainbow_wave(delay: float = 0.002) -> None:
     def running_function(
         start_colour,
         end_colour,
-        num_pixels: int,
     ) -> None:
         """
         Function that creates the dictionary with the updates needed for the wave
 
         :param start_colour: TYPE-Tuple. The Start colour of the rainbow gradient
         :param end_colour: TYPE-Tuple. The End colour of the rainbow gradient
-        :param num_pixels: The number of pixels in strip (elements in the list)
         :return: None
         """
 
@@ -132,18 +130,18 @@ def rainbow_wave(delay: float = 0.002) -> None:
             pixel: (
                 int(
                     start_colour[0]
-                    + (end_colour[0] - start_colour[0]) * pixel / (num_pixels - 1)
+                    + (end_colour[0] - start_colour[0]) * pixel / (NUM_PIXELS - 1)
                 ),
                 int(
                     start_colour[1]
-                    + (end_colour[1] - start_colour[1]) * pixel / (num_pixels - 1)
+                    + (end_colour[1] - start_colour[1]) * pixel / (NUM_PIXELS - 1)
                 ),
                 int(
                     start_colour[2]
-                    + (end_colour[2] - start_colour[2]) * pixel / (num_pixels - 1)
+                    + (end_colour[2] - start_colour[2]) * pixel / (NUM_PIXELS - 1)
                 ),
             )
-            for pixel in range(num_pixels)
+            for pixel in range(NUM_PIXELS)
         }
 
         debug_print(f"{update_dict}")
@@ -152,11 +150,11 @@ def rainbow_wave(delay: float = 0.002) -> None:
 
     debug_print("WAVE STARTED (1/2)")
     for i in range(len(colour_sequence) - 1):
-        running_function(colour_sequence[i], colour_sequence[i + 1], NUM_PIXELS)
+        running_function(colour_sequence[i], colour_sequence[i + 1])
     debug_print("WAVE FINISHED (2/2)")
 
 
-def rainbow_wave_fixed(delay: float = 0, num_iterations: int = 30) -> None:
+def rainbow_wave_improved(delay: float = 0, num_iterations: int = NUM_PIXELS) -> None:
     """
     Create a fixed rainbow gradient that moves across the LED strip.
 
@@ -165,8 +163,6 @@ def rainbow_wave_fixed(delay: float = 0, num_iterations: int = 30) -> None:
     """
     debug_print("Creating Fixed Rainbow Gradient")
 
-    # Define the number of pixels in the strip
-    num_pixels = len(strip)
 
     def generate_fixed_rainbow_gradient() -> dict:
         """
@@ -175,9 +171,9 @@ def rainbow_wave_fixed(delay: float = 0, num_iterations: int = 30) -> None:
         :return: Dictionary of pixel colors
         """
         update_dict = {}
-        for LED in range(num_pixels):
+        for LED in range(NUM_PIXELS):
             # Normalize pixel position to create a smooth rainbow gradient
-            hue = LED / num_pixels
+            hue = LED / NUM_PIXELS
             r, g, b = hsv_to_rgb(hue, 1.0, 1.0)
             update_dict[LED] = (int(r * 255), int(g * 255), int(b * 255))
 
@@ -231,13 +227,11 @@ def rainbow_wave_fixed(delay: float = 0, num_iterations: int = 30) -> None:
         # Rotate the gradient by shifting color values
         rotated_gradient = {}
         for pixel, color in rainbow_gradient.items():
-            rotated_gradient[(pixel + 1) % num_pixels] = color
+            rotated_gradient[(pixel + 1) % NUM_PIXELS] = color
         time.sleep(delay)
         rainbow_gradient = rotated_gradient
 
     debug_print("Rainbow Wave Finished")
-
-
 
 
 while True:
@@ -248,10 +242,5 @@ while True:
     debug_print("BEGINNING OF PIXEL SEQUENCE")
 
     rainbow_wave(0.03)
-    # rainbow_cycle()
-
-
-
-
-
-
+    rainbow_wave_improved()
+    rainbow_cycle()
