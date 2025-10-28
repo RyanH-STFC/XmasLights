@@ -4,9 +4,10 @@ Script for raspberry pi pico to change neopixel lights on pin GP16
 
 # pylint: disable = import-error, no-member, no-else-return
 import time
+from typing import Tuple
+
 import board
 import neopixel
-
 
 
 strip = neopixel.NeoPixel(board.GP16, 30, brightness=0.05)
@@ -56,7 +57,7 @@ def rainbow_cycle(delay: float = 0.002) -> bool:
             if decrement_index is not None:
                 rgb[decrement_index] -= 1
 
-            debug_print("Red:{} Green:{} Blue:{}".format(*rgb), False)
+            debug_print(f"Red:{rgb[0]} Green:{rgb[1]} Blue:{rgb[2]}", False)
 
             strip.fill(tuple(rgb))
             time.sleep(delay)
@@ -74,16 +75,39 @@ def rainbow_cycle(delay: float = 0.002) -> bool:
         return True
 
 
-def update_multiple_pixels(pixels, updates):
-    for index, color in updates.items():
-        time.sleep(0.05)
-        pixels[index] = color
-        print(color)
+def update_multiple_pixels(
+    pixels: List[Tuple[int, int, int]],
+    updates: Dict[int, Tuple[int, int, int]],
+    delay: float = 0
+) -> None:
+    """
+    Takes in the strip of LED's and updates each LED's colour value
+    based on the value of the key given
+    The key also is the index of which the LED is to be updated
+
+    :param pixels: The list of the strip of LED's
+    :param updates: The dictionary of updated for the LED's
+    :param delay: the delay between each update
+    :return: None
+    """
+    for index, colour in updates.items():
+        pixels[index] = colour
+
+        debug_print(f"UPDATED {index}: {colour}", False)
+
+        if delay > 0:
+            time.sleep(delay)
 
 
 def rainbow_wave(delay: float = 0.002) -> None:
+    """
+    Call this function to create a wave of rainbow gradient colours.
 
-    color_sequence = [
+    :param delay: The speed at which the rainbow gradient colours change down the strip
+    :return: None
+    """
+    debug_print("Creating Colour sequence")
+    colour_sequence = [
         (255, 0, 0),  # Red
         (255, 255, 0),  # Yellow
         (0, 255, 0),  # Green
@@ -92,37 +116,48 @@ def rainbow_wave(delay: float = 0.002) -> None:
         (255, 0, 255),  # Magenta
     ]
 
-
     def running_function(
         start_colour: Tuple,
         end_colour: Tuple,
         num_pixels: int,
     ) -> None:
+        """
+        Function that creates the dictionary with the updates needed for the wave
+
+        :param start_colour: The Start colour of the rainbow gradient
+        :param end_colour: The End colour of the rainbow gradient
+        :param num_pixels: The number of pixels in strip (elements in the list)
+        :return: None
+        """
+
+        debug_print("Creating update dictionary", False)
+
         update_dict = {
-            i: (
+            pixel: (
                 int(
                     start_colour[0]
-                    + (end_colour[0] - start_colour[0]) * i / (num_pixels - 1)
+                    + (end_colour[0] - start_colour[0]) * pixel / (num_pixels - 1)
                 ),
                 int(
                     start_colour[1]
-                    + (end_colour[1] - start_colour[1]) * i / (num_pixels - 1)
+                    + (end_colour[1] - start_colour[1]) * pixel / (num_pixels - 1)
                 ),
                 int(
                     start_colour[2]
-                    + (end_colour[2] - start_colour[2]) * i / (num_pixels - 1)
+                    + (end_colour[2] - start_colour[2]) * pixel / (num_pixels - 1)
                 ),
             )
-            for i in range(num_pixels)
+            for pixel in range(num_pixels)
         }
 
-        update_multiple_pixels(strip, update_dict)
+        debug_print(f"{update_dict}")
+
+        update_multiple_pixels(strip, update_dict, delay)
 
 
 
-    for i in range(len(color_sequence) - 1):
-        running_function(color_sequence[i], color_sequence[i+1], len(strip))
-        time.sleep(delay)
+    for i in range(len(colour_sequence) - 1):
+        running_function(colour_sequence[i], colour_sequence[i+1], len(strip))
 
 
 while True:
@@ -130,7 +165,7 @@ while True:
     strip.fill((0, 0, 0))
     time.sleep(1)
 
+
     debug_print("BEGINNING OF MAIN WHILE LOOP")
-    rainbow_wave(0.001)
-    rainbow_cycle()
-    time.sleep(1)
+    rainbow_wave(0.1)
+    #rainbow_cycle()
