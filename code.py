@@ -7,11 +7,13 @@ import time
 import board
 import neopixel
 
+PIXEL_PIN = board.GP16
+NUM_PIXELS = 30
+PIXEL_BRIGHTNESS = 0.05
 
-strip = neopixel.NeoPixel(board.GP16, 30, brightness=0.05)
+strip = neopixel.NeoPixel(PIXEL_PIN, NUM_PIXELS, brightness=PIXEL_BRIGHTNESS)
 rgb = [255, 0, 0]
 DEBUG_PRINT = True
-
 
 def debug_print(msg: str, new_line: bool = True) -> None:
     """
@@ -21,10 +23,9 @@ def debug_print(msg: str, new_line: bool = True) -> None:
     :param new_line: Bool value, True to create a space underneath the message, default is True
     :return: None
     """
-    if DEBUG_PRINT:
-        if new_line:
-            print(msg, "\n")
-        else:
+    if DEBUG_PRINT & new_line:
+        print(msg, "\n")
+    elif DEBUG_PRINT:
             print(msg)
 
 
@@ -71,7 +72,6 @@ def rainbow_cycle(delay: float = 0.002) -> bool:
         running_function(0, 2)
         debug_print("END OF RAINBOW CYCLE: (2/2)")
         return True
-
 
 def update_multiple_pixels(
     pixels,
@@ -122,8 +122,8 @@ def rainbow_wave(delay: float = 0.002) -> None:
         """
         Function that creates the dictionary with the updates needed for the wave
 
-        :param start_colour:TYPE-Tuple. The Start colour of the rainbow gradient
-        :param end_colour:TYPE-Tuple. The End colour of the rainbow gradient
+        :param start_colour: TYPE-Tuple. The Start colour of the rainbow gradient
+        :param end_colour: TYPE-Tuple. The End colour of the rainbow gradient
         :param num_pixels: The number of pixels in strip (elements in the list)
         :return: None
         """
@@ -152,21 +152,17 @@ def rainbow_wave(delay: float = 0.002) -> None:
 
         update_multiple_pixels(strip, update_dict, delay)
 
-
     debug_print("WAVE STARTED (1/2)")
     for i in range(len(colour_sequence) - 1):
-        running_function(colour_sequence[i], colour_sequence[i+1], len(strip))
+        running_function(colour_sequence[i], colour_sequence[i+1], NUM_PIXELS)
     debug_print("WAVE FINISHED (2/2)")
-
-
-
 
 while True:
     # debug_print("Turning pixels black")
     # strip.fill((0, 0, 0))
     # time.sleep(1)
 
-    debug_print("BEGINNING OF MAIN WHILE LOOP")
+    debug_print("BEGINNING OF PIXEL SEQUENCE")
+
     rainbow_wave(0.03)
-    #rainbow_cycle_example(0.1, len(strip))
     # rainbow_cycle()
