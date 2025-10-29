@@ -3,17 +3,18 @@ Script for raspberry pi pico to change neopixel lights on pin GP16
 """
 
 # pylint: disable = import-error, no-member, no-else-return
+import random
 import time
 import board
 import neopixel
 
 PIXEL_PIN = board.GP16
-NUM_PIXELS = 30
-PIXEL_BRIGHTNESS = 0.05
+NUM_PIXELS = 256
+PIXEL_BRIGHTNESS = 0.1
 
 strip = neopixel.NeoPixel(PIXEL_PIN, NUM_PIXELS, brightness=PIXEL_BRIGHTNESS)
 rgb = [255, 0, 0]
-DEBUG_PRINT = False
+DEBUG_PRINT = True
 
 
 def debug_print(msg: str, new_line: bool = True) -> None:
@@ -28,6 +29,14 @@ def debug_print(msg: str, new_line: bool = True) -> None:
         print(msg, "\n")
     elif DEBUG_PRINT:
         print(msg)
+
+def print_rgb() -> None:
+    """
+    prints rgb values in format "Red:{} Green:{} Blue:{}"
+    :return: None
+    """
+    debug_print(f"Red:{rgb[0]} Green:{rgb[1]} Blue:{rgb[2]}", False)
+
 
 
 def rainbow_cycle(delay: float = 0.002) -> bool:
@@ -57,7 +66,7 @@ def rainbow_cycle(delay: float = 0.002) -> bool:
             if decrement_index is not None:
                 rgb[decrement_index] -= 1
 
-            debug_print(f"Red:{rgb[0]} Green:{rgb[1]} Blue:{rgb[2]}", False)
+            print_rgb()
 
             strip.fill(tuple(rgb))
             time.sleep(delay)
@@ -232,6 +241,38 @@ def rainbow_wave_improved(delay: float = 0, num_iterations: int = NUM_PIXELS) ->
 
     debug_print("Rainbow Wave Finished")
 
+def sparkle_pixels(
+    speed: float = 0.1, colour=(255, 255, 255), intensity: float = 0.2, cycles: int = 10
+) -> None:
+    """
+    Create a sparkling effect on Neopixel strip
+    :param speed: Time between brightness changes
+    :param colour: Tuple[int, int, int]     RGB colour. default is white
+    :param intensity: percentage of pixels to light up
+    :param cycles: number of sparkle cycles
+    """
+
+    for c in range(cycles):
+        debug_print(f"sparkling cycle {c} of {cycles}", True)
+
+        # Randomly increase or decrease brightness
+        if random.random() > 0.5:
+            pixel_dict = {}
+
+            for _ in range(
+                    random.randint(round((NUM_PIXELS * intensity) / 2), round(NUM_PIXELS * intensity))
+            ):
+                random_pixel = random.randint(0, NUM_PIXELS - 1)
+                pixel_dict[random_pixel] = colour
+
+            debug_print(f"UNSORTED DICTIONARY:\n{pixel_dict}", True)
+            # Sort dictionary of unordered random keys by key
+            pixel_dict = dict(sorted(pixel_dict.items()))
+            debug_print(f"SORTED DICTIONARY:\n{pixel_dict}", True)
+            update_multiple_pixels(strip, pixel_dict)
+
+            time.sleep(speed)
+            strip.fill((0, 0, 0))
 
 while True:
     # debug_print("Turning pixels black")
@@ -240,6 +281,7 @@ while True:
 
     debug_print("BEGINNING OF PIXEL SEQUENCE")
 
-    rainbow_wave()
-    rainbow_wave_improved()
-    rainbow_cycle()
+    sparkle_pixels(colour=(255, 200, 50), cycles=30)
+    #rainbow_wave()
+    #rainbow_wave_improved()
+    #rainbow_cycle()
