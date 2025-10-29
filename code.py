@@ -171,11 +171,11 @@ def rainbow_wave_improved(delay: float = 0, num_iterations: int = NUM_PIXELS) ->
         :return: Dictionary of pixel colors
         """
         update_dict = {}
-        for LED in range(NUM_PIXELS):
+        for led in range(NUM_PIXELS):
             # Normalize pixel position to create a smooth rainbow gradient
-            hue = LED / NUM_PIXELS
+            hue = led / NUM_PIXELS
             r, g, b = hsv_to_rgb(hue, 1.0, 1.0)
-            update_dict[LED] = (int(r * 255), int(g * 255), int(b * 255))
+            update_dict[led] = (int(r * 255), int(g * 255), int(b * 255))
 
         return update_dict
 
