@@ -15,7 +15,7 @@ PIXEL_BRIGHTNESS = 0.1
 strip = neopixel.NeoPixel(PIXEL_PIN, NUM_PIXELS, brightness=PIXEL_BRIGHTNESS)
 
 rgb = [255, 0, 0]
-DEBUG_PRINT = True
+DEBUG_PRINT = False
 
 
 def debug_print(msg: str, new_line: bool = True) -> None:
@@ -106,7 +106,7 @@ def update_multiple_pixels(pixels, updates, delay: float = 0) -> None:
             time.sleep(delay)
 
 
-def rainbow_wave(delay: float = 0.002) -> None:
+def rainbow_wave(delay: float = 0.03) -> None:
     """
     Call this function to create a wave of rainbow gradient colours.
 
@@ -126,14 +126,12 @@ def rainbow_wave(delay: float = 0.002) -> None:
     def running_function(
         start_colour,
         end_colour,
-        num_pixels: int,
     ) -> None:
         """
         Function that creates the dictionary with the updates needed for the wave
 
         :param start_colour: TYPE-Tuple. The Start colour of the rainbow gradient
         :param end_colour: TYPE-Tuple. The End colour of the rainbow gradient
-        :param num_pixels: The number of pixels in strip (elements in the list)
         :return: None
         """
 
@@ -143,18 +141,18 @@ def rainbow_wave(delay: float = 0.002) -> None:
             pixel: (
                 int(
                     start_colour[0]
-                    + (end_colour[0] - start_colour[0]) * pixel / (num_pixels - 1)
+                    + (end_colour[0] - start_colour[0]) * pixel / (NUM_PIXELS - 1)
                 ),
                 int(
                     start_colour[1]
-                    + (end_colour[1] - start_colour[1]) * pixel / (num_pixels - 1)
+                    + (end_colour[1] - start_colour[1]) * pixel / (NUM_PIXELS - 1)
                 ),
                 int(
                     start_colour[2]
-                    + (end_colour[2] - start_colour[2]) * pixel / (num_pixels - 1)
+                    + (end_colour[2] - start_colour[2]) * pixel / (NUM_PIXELS - 1)
                 ),
             )
-            for pixel in range(num_pixels)
+            for pixel in range(NUM_PIXELS)
         }
 
         debug_print(f"{update_dict}")
@@ -163,7 +161,7 @@ def rainbow_wave(delay: float = 0.002) -> None:
 
     debug_print("WAVE STARTED (1/2)")
     for i in range(len(colour_sequence) - 1):
-        running_function(colour_sequence[i], colour_sequence[i + 1], NUM_PIXELS)
+        running_function(colour_sequence[i], colour_sequence[i + 1])
     debug_print("WAVE FINISHED (2/2)")
 
 
@@ -197,6 +195,83 @@ def sparkle_pixels(
 
         time.sleep(speed)
         strip.fill((0, 0, 0))
+def rainbow_wave_improved(delay: float = 0, num_iterations: int = NUM_PIXELS) -> None:
+    """
+    Create a fixed rainbow gradient that moves across the LED strip.
+
+    :param delay: The speed of the wave movement
+    :param num_iterations: Number of times to shift the gradient
+    """
+    debug_print("Creating Fixed Rainbow Gradient")
+
+
+    def generate_fixed_rainbow_gradient() -> dict:
+        """
+        Generate a complete rainbow gradient across the entire strip.
+
+        :return: Dictionary of pixel colors
+        """
+        update_dict = {}
+        for led in range(NUM_PIXELS):
+            # Normalize pixel position to create a smooth rainbow gradient
+            hue = led / NUM_PIXELS
+            r, g, b = hsv_to_rgb(hue, 1.0, 1.0)
+            update_dict[led] = (int(r * 255), int(g * 255), int(b * 255))
+
+        return update_dict
+
+    def hsv_to_rgb(hue: float, saturation: float, value: float) -> tuple:
+        """
+        Convert HSV color space to RGB.
+
+        :param hue: Hue (0-1)
+        :param saturation: Saturation (0-1)
+        :param value: Brightness (0-1)
+        :return: RGB tuple (0-1 range)
+        """
+        # Determine which sector of the color wheel we're in
+        hue_sector = int(hue * 6)
+
+        # Fractional part within the sector
+        hue_fraction = hue * 6 - hue_sector
+
+        # Calculate intermediate values for color blending
+        lowest_component = value * (1 - saturation)
+        mid_low_component = value * (1 - hue_fraction * saturation)
+        mid_high_component = value * (1 - (1 - hue_fraction) * saturation)
+
+        # Map the sector to specific RGB combinations
+        if hue_sector == 0:
+            return value, mid_high_component, lowest_component
+        elif hue_sector == 1:
+            return mid_low_component, value, lowest_component
+        elif hue_sector == 2:
+            return lowest_component, value, mid_high_component
+        elif hue_sector == 3:
+            return lowest_component, mid_low_component, value
+        elif hue_sector == 4:
+            return mid_high_component, lowest_component, value
+        else:  # hue_sector == 5
+            return value, lowest_component, mid_low_component
+
+    debug_print("Rainbow Wave Started")
+
+    # Generate the initial rainbow gradient
+    rainbow_gradient = generate_fixed_rainbow_gradient()
+
+    # Shift the gradient multiple times
+    for _ in range(num_iterations):
+        # Update the strip with the current gradient
+        update_multiple_pixels(strip, rainbow_gradient)
+
+        # Rotate the gradient by shifting color values
+        rotated_gradient = {}
+        for pixel, color in rainbow_gradient.items():
+            rotated_gradient[(pixel + 1) % NUM_PIXELS] = color
+        time.sleep(delay)
+        rainbow_gradient = rotated_gradient
+
+    debug_print("Rainbow Wave Finished")
 
 
 while True:
@@ -209,3 +284,6 @@ while True:
     sparkle_pixels(colour=(255, 200, 50))
     # rainbow_wave(0.03)
     # rainbow_cycle()
+    rainbow_wave()
+    rainbow_wave_improved()
+    rainbow_cycle()
