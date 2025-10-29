@@ -10,7 +10,7 @@ import neopixel
 
 PIXEL_PIN = board.GP16
 NUM_PIXELS = 30
-PIXEL_BRIGHTNESS = 0.05
+PIXEL_BRIGHTNESS = 0.1
 
 strip = neopixel.NeoPixel(PIXEL_PIN, NUM_PIXELS, brightness=PIXEL_BRIGHTNESS)
 
@@ -167,7 +167,9 @@ def rainbow_wave(delay: float = 0.002) -> None:
     debug_print("WAVE FINISHED (2/2)")
 
 
-def sparkle_pixels(speed: float = 0.1, colour=(255,255,255), intensity: float = 0.33) -> None:
+def sparkle_pixels(
+    speed: float = 0.1, colour=(255, 255, 255), intensity: float = 0.33
+) -> None:
     """
     Create a sparkling effect on Neopixel strip
 
@@ -183,7 +185,11 @@ def sparkle_pixels(speed: float = 0.1, colour=(255,255,255), intensity: float = 
     # Randomly increase or decrease brightness
     if random.random() > 0.5:
         pixel_dict = {}
-        for i in range(random.randint(round((NUM_PIXELS*intensity)/2), round(NUM_PIXELS*intensity))):
+        for _ in range(
+            random.randint(
+                round((NUM_PIXELS * intensity) / 2), round(NUM_PIXELS * intensity)
+            )
+        ):
             random_pixel = random.randint(0, NUM_PIXELS - 1)
             pixel_dict[random_pixel] = colour
 
@@ -191,8 +197,6 @@ def sparkle_pixels(speed: float = 0.1, colour=(255,255,255), intensity: float = 
 
         time.sleep(speed)
         strip.fill((0, 0, 0))
-
-    # Short pause
 
 
 while True:
