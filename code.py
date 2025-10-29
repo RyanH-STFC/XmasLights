@@ -95,7 +95,7 @@ def update_multiple_pixels(pixels, updates, delay: float = 0) -> None:
             time.sleep(delay)
 
 
-def rainbow_wave(delay: float = 0.002) -> None:
+def rainbow_wave(delay: float = 0.03) -> None:
     """
     Call this function to create a wave of rainbow gradient colours.
 
@@ -220,7 +220,6 @@ def rainbow_wave_improved(delay: float = 0, num_iterations: int = NUM_PIXELS) ->
 
     # Shift the gradient multiple times
     for _ in range(num_iterations):
-        print(_)
         # Update the strip with the current gradient
         update_multiple_pixels(strip, rainbow_gradient)
 
@@ -241,6 +240,6 @@ while True:
 
     debug_print("BEGINNING OF PIXEL SEQUENCE")
 
-    rainbow_wave(0.03)
+    rainbow_wave()
     rainbow_wave_improved()
     rainbow_cycle()
