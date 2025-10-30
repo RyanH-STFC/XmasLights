@@ -3,40 +3,31 @@ Script for raspberry pi pico to change neopixel lights on pin GP16
 """
 
 # pylint: disable = import-error, no-member, no-else-return
-import random
 import time
 import board
 import neopixel
 
 PIXEL_PIN = board.GP16
-NUM_PIXELS = 256
-PIXEL_BRIGHTNESS = 0.1
+NUM_PIXELS = 30
+PIXEL_BRIGHTNESS = 0.05
 
 strip = neopixel.NeoPixel(PIXEL_PIN, NUM_PIXELS, brightness=PIXEL_BRIGHTNESS)
 rgb = [255, 0, 0]
-DEBUG_PRINT = True
+DEBUG_PRINT = False
 
 
 def debug_print(msg: str, new_line: bool = True) -> None:
     """
-    Prints messages to stdout. for debugging purposes.
+    A function that prints messages to stdout. for debugging purposes.
 
     :param msg: The message to print
-    :param new_line: Bool value, True to create a new line after the message. Default is True
+    :param new_line: Bool value, True to create a space underneath the message, default is True
     :return: None
     """
     if DEBUG_PRINT & new_line:
         print(msg, "\n")
     elif DEBUG_PRINT:
         print(msg)
-
-
-def print_rgb() -> None:
-    """
-    prints rgb values in format "Red:{} Green:{} Blue:{}"
-    :return: None
-    """
-    debug_print(f"Red:{rgb[0]} Green:{rgb[1]} Blue:{rgb[2]}", False)
 
 
 def rainbow_cycle(delay: float = 0.002) -> bool:
@@ -66,7 +57,7 @@ def rainbow_cycle(delay: float = 0.002) -> bool:
             if decrement_index is not None:
                 rgb[decrement_index] -= 1
 
-            print_rgb()
+            debug_print(f"Red:{rgb[0]} Green:{rgb[1]} Blue:{rgb[2]}", False)
 
             strip.fill(tuple(rgb))
             time.sleep(delay)
@@ -84,21 +75,19 @@ def rainbow_cycle(delay: float = 0.002) -> bool:
         return True
 
 
-def update_multiple_pixels(pixel_dict, delay: float = 0) -> None:
+def update_multiple_pixels(pixels, updates, delay: float = 0) -> None:
     """
-    Updates the LEDs colour value with the value of a pixels key
-    The pixels key is the index of the LED to be updated
+    Takes in the strip of LED's and updates each LED's colour value
+    based on the value of the key given
+    The key also is the index of which the LED is to be updated
 
-    :param pixel_dict:  Dict[int, Tuple[int, int, int]]
-                        The dictionary of new RGB values for specific pixels
-    :param delay: The delay in seconds between each update
+    :param pixels: List[Tuple[int, int, int]]    The list of the strip of LED's
+    :param updates:  Dict[int, Tuple[int, int, int]]    The dictionary of updated for the LED's
+    :param delay: the delay between each update
     :return: None
     """
-    sorted_keys = sorted(pixel_dict.keys())
-
-    for index in sorted_keys:
-        colour = pixel_dict[index]
-        strip[index] = colour
+    for index, colour in updates.items():
+        pixels[index] = colour
 
         debug_print(f"UPDATED {index}: {colour}", False)
 
@@ -108,7 +97,7 @@ def update_multiple_pixels(pixel_dict, delay: float = 0) -> None:
 
 def rainbow_wave(delay: float = 0.03) -> None:
     """
-    Creates a wave of rainbow gradient colours.
+    Call this function to create a wave of rainbow gradient colours.
 
     :param delay: The speed at which the rainbow gradient colours change down the strip
     :return: None
@@ -157,7 +146,7 @@ def rainbow_wave(delay: float = 0.03) -> None:
 
         debug_print(f"{update_dict}")
 
-        update_multiple_pixels(update_dict, delay)
+        update_multiple_pixels(strip, update_dict, delay)
 
     debug_print("WAVE STARTED (1/2)")
     for i in range(len(colour_sequence) - 1):
@@ -173,6 +162,7 @@ def rainbow_wave_improved(delay: float = 0, num_iterations: int = NUM_PIXELS) ->
     :param num_iterations: Number of times to shift the gradient
     """
     debug_print("Creating Fixed Rainbow Gradient")
+
 
     def generate_fixed_rainbow_gradient() -> dict:
         """
@@ -231,7 +221,7 @@ def rainbow_wave_improved(delay: float = 0, num_iterations: int = NUM_PIXELS) ->
     # Shift the gradient multiple times
     for _ in range(num_iterations):
         # Update the strip with the current gradient
-        update_multiple_pixels(rainbow_gradient)
+        update_multiple_pixels(strip, rainbow_gradient)
 
         # Rotate the gradient by shifting color values
         rotated_gradient = {}
@@ -243,38 +233,6 @@ def rainbow_wave_improved(delay: float = 0, num_iterations: int = NUM_PIXELS) ->
     debug_print("Rainbow Wave Finished")
 
 
-def sparkle_pixels(
-    speed: float = 0.1, colour=(255, 255, 255), intensity: float = 0.2, cycles: int = 10
-) -> None:
-    """
-    Create a random sparkling effect
-
-    :param speed: Time in seconds a set of sparkles last
-    :param colour: Tuple[int, int, int]     RGB colour. default is white
-    :param intensity: Percentage of pixels to light up
-    :param cycles: Number of sparkle cycles
-    """
-
-    for c in range(cycles):
-        debug_print(f"sparkling cycle {c} of {cycles}", True)
-
-        if random.random() > 0.5:
-            pixel_dict = {}
-
-            for _ in range(
-                random.randint(
-                    round((NUM_PIXELS * intensity) / 2), round(NUM_PIXELS * intensity)
-                )
-            ):
-                random_pixel = random.randint(0, NUM_PIXELS - 1)
-                pixel_dict[random_pixel] = colour
-
-            update_multiple_pixels(pixel_dict)
-
-            time.sleep(speed)
-            strip.fill((0, 0, 0))
-
-
 while True:
     # debug_print("Turning pixels black")
     # strip.fill((0, 0, 0))
@@ -282,7 +240,6 @@ while True:
 
     debug_print("BEGINNING OF PIXEL SEQUENCE")
 
-    sparkle_pixels(colour=(255, 200, 50), cycles=30)
-    # rainbow_wave()
-    # rainbow_wave_improved()
-    # rainbow_cycle()
+    rainbow_wave()
+    rainbow_wave_improved()
+    rainbow_cycle()
