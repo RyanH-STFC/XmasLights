@@ -30,13 +30,13 @@ def debug_print(msg: str, new_line: bool = True) -> None:
     elif DEBUG_PRINT:
         print(msg)
 
+
 def print_rgb() -> None:
     """
     prints rgb values in format "Red:{} Green:{} Blue:{}"
     :return: None
     """
     debug_print(f"Red:{rgb[0]} Green:{rgb[1]} Blue:{rgb[2]}", False)
-
 
 
 def rainbow_cycle(delay: float = 0.002) -> bool:
@@ -172,7 +172,6 @@ def rainbow_wave_improved(delay: float = 0, num_iterations: int = NUM_PIXELS) ->
     """
     debug_print("Creating Fixed Rainbow Gradient")
 
-
     def generate_fixed_rainbow_gradient() -> dict:
         """
         Generate a complete rainbow gradient across the entire strip.
@@ -241,6 +240,7 @@ def rainbow_wave_improved(delay: float = 0, num_iterations: int = NUM_PIXELS) ->
 
     debug_print("Rainbow Wave Finished")
 
+
 def sparkle_pixels(
     speed: float = 0.1, colour=(255, 255, 255), intensity: float = 0.2, cycles: int = 10
 ) -> None:
@@ -260,7 +260,9 @@ def sparkle_pixels(
             pixel_dict = {}
 
             for _ in range(
-                    random.randint(round((NUM_PIXELS * intensity) / 2), round(NUM_PIXELS * intensity))
+                random.randint(
+                    round((NUM_PIXELS * intensity) / 2), round(NUM_PIXELS * intensity)
+                )
             ):
                 random_pixel = random.randint(0, NUM_PIXELS - 1)
                 pixel_dict[random_pixel] = colour
@@ -268,11 +270,13 @@ def sparkle_pixels(
             debug_print(f"UNSORTED DICTIONARY:\n{pixel_dict}", True)
             # Sort dictionary of unordered random keys by key
             pixel_dict = dict(sorted(pixel_dict.items()))
+
             debug_print(f"SORTED DICTIONARY:\n{pixel_dict}", True)
             update_multiple_pixels(strip, pixel_dict)
 
             time.sleep(speed)
             strip.fill((0, 0, 0))
+
 
 while True:
     # debug_print("Turning pixels black")
@@ -282,6 +286,6 @@ while True:
     debug_print("BEGINNING OF PIXEL SEQUENCE")
 
     sparkle_pixels(colour=(255, 200, 50), cycles=30)
-    #rainbow_wave()
-    #rainbow_wave_improved()
-    #rainbow_cycle()
+    # rainbow_wave()
+    # rainbow_wave_improved()
+    # rainbow_cycle()
