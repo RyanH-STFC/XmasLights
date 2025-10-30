@@ -4,6 +4,7 @@ Script for raspberry pi pico to change neopixel lights on pin GP16
 
 # pylint: disable = import-error, no-member, no-else-return
 import random
+import sys
 import time
 import board
 import neopixel
@@ -19,10 +20,10 @@ DEBUG_PRINT = True
 
 def debug_print(msg: str, new_line: bool = True) -> None:
     """
-    A function that prints messages to stdout. for debugging purposes.
+    Prints messages to stdout. for debugging purposes.
 
     :param msg: The message to print
-    :param new_line: Bool value, True to create a space underneath the message, default is True
+    :param new_line: Bool value, True to create a new line after the message. Default is True
     :return: None
     """
     if DEBUG_PRINT & new_line:
@@ -84,19 +85,20 @@ def rainbow_cycle(delay: float = 0.002) -> bool:
         return True
 
 
-def update_multiple_pixels(pixels, updates, delay: float = 0) -> None:
+def update_multiple_pixels(pixel_dict, delay: float = 0) -> None:
     """
-    Takes in the strip of LED's and updates each LED's colour value
-    based on the value of the key given
-    The key also is the index of which the LED is to be updated
+    Updates the LEDs colour value with the value of a pixels key
+    The pixels key is the index of the LED to be updated
 
-    :param pixels: List[Tuple[int, int, int]]    The list of the strip of LED's
-    :param updates:  Dict[int, Tuple[int, int, int]]    The dictionary of updated for the LED's
-    :param delay: the delay between each update
+    :param pixel_dict:  Dict[int, Tuple[int, int, int]]    The dictionary of new RGB values for specific pixels
+    :param delay: The delay in seconds between each update
     :return: None
     """
-    for index, colour in updates.items():
-        pixels[index] = colour
+    sorted_keys = sorted(pixel_dict.keys())
+
+    for index in sorted_keys:
+        colour = pixel_dict[index]
+        strip[index] = colour
 
         debug_print(f"UPDATED {index}: {colour}", False)
 
@@ -106,7 +108,7 @@ def update_multiple_pixels(pixels, updates, delay: float = 0) -> None:
 
 def rainbow_wave(delay: float = 0.03) -> None:
     """
-    Call this function to create a wave of rainbow gradient colours.
+    Creates a wave of rainbow gradient colours.
 
     :param delay: The speed at which the rainbow gradient colours change down the strip
     :return: None
@@ -155,7 +157,7 @@ def rainbow_wave(delay: float = 0.03) -> None:
 
         debug_print(f"{update_dict}")
 
-        update_multiple_pixels(strip, update_dict, delay)
+        update_multiple_pixels(update_dict, delay)
 
     debug_print("WAVE STARTED (1/2)")
     for i in range(len(colour_sequence) - 1):
@@ -229,7 +231,7 @@ def rainbow_wave_improved(delay: float = 0, num_iterations: int = NUM_PIXELS) ->
     # Shift the gradient multiple times
     for _ in range(num_iterations):
         # Update the strip with the current gradient
-        update_multiple_pixels(strip, rainbow_gradient)
+        update_multiple_pixels(rainbow_gradient)
 
         # Rotate the gradient by shifting color values
         rotated_gradient = {}
@@ -245,17 +247,17 @@ def sparkle_pixels(
     speed: float = 0.1, colour=(255, 255, 255), intensity: float = 0.2, cycles: int = 10
 ) -> None:
     """
-    Create a sparkling effect on Neopixel strip
-    :param speed: Time between brightness changes
+    Create a random sparkling effect
+
+    :param speed: Time in seconds a set of sparkles last
     :param colour: Tuple[int, int, int]     RGB colour. default is white
-    :param intensity: percentage of pixels to light up
-    :param cycles: number of sparkle cycles
+    :param intensity: Percentage of pixels to light up
+    :param cycles: Number of sparkle cycles
     """
 
     for c in range(cycles):
         debug_print(f"sparkling cycle {c} of {cycles}", True)
 
-        # Randomly increase or decrease brightness
         if random.random() > 0.5:
             pixel_dict = {}
 
@@ -267,12 +269,7 @@ def sparkle_pixels(
                 random_pixel = random.randint(0, NUM_PIXELS - 1)
                 pixel_dict[random_pixel] = colour
 
-            debug_print(f"UNSORTED DICTIONARY:\n{pixel_dict}", True)
-            # Sort dictionary of unordered random keys by key
-            pixel_dict = dict(sorted(pixel_dict.items()))
-
-            debug_print(f"SORTED DICTIONARY:\n{pixel_dict}", True)
-            update_multiple_pixels(strip, pixel_dict)
+            update_multiple_pixels(pixel_dict)
 
             time.sleep(speed)
             strip.fill((0, 0, 0))
