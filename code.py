@@ -36,11 +36,12 @@ def update_multiple_pixels(updates, delay: float = 0) -> None:
     based on the value of the key given
     The key also is the index of which the LED is to be updated
 
-    :param updates:  Dict[int, Tuple[int, int, int]]    The dictionary of updated for the LED's
+    :param updates:  List[Tuple[int, int, int]]    The dictionary of updated for the LED's
     :param delay: the delay between each update
     :return: None
     """
-    for index, colour in updates.items():
+
+    for index, colour in enumerate(updates):
         strip[index] = colour
 
         debug_print(f"UPDATED {index}: {colour}", False)
@@ -124,8 +125,8 @@ def rainbow_wave(delay: float = 0.03) -> None:
 
         debug_print("Creating update dictionary", False)
 
-        update_dict = {
-            pixel: (
+        update_list = [
+            (
                 int(
                     start_colour[0]
                     + (end_colour[0] - start_colour[0]) * pixel / (NUM_PIXELS - 1)
@@ -140,11 +141,11 @@ def rainbow_wave(delay: float = 0.03) -> None:
                 ),
             )
             for pixel in range(NUM_PIXELS)
-        }
+        ]
 
-        debug_print(f"{update_dict}")
+        debug_print(f"{update_list}")
 
-        update_multiple_pixels(update_dict, delay)
+        update_multiple_pixels(update_list, delay)
 
     debug_print("WAVE STARTED (1/2)")
     for i in range(len(colour_sequence) - 1):
@@ -160,7 +161,6 @@ def rainbow_wave_improved(delay: float = 0, num_iterations: int = NUM_PIXELS) ->
     :param num_iterations: Number of times to shift the gradient
     """
     debug_print("Creating Fixed Rainbow Gradient")
-
 
     def generate_fixed_rainbow_gradient() -> dict:
         """
