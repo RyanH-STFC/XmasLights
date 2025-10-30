@@ -30,13 +30,15 @@ def debug_print(msg: str, new_line: bool = True) -> None:
         print(msg)
 
 
-def update_multiple_pixels(updates, delay: float = 0) -> None:
+def update_multiple_pixels(
+    updates: list[tuple[int, int, int]], delay: float = 0
+):
     """
     Takes in the strip of LED's and updates each LED's colour value
     based on the value of the key given
     The key also is the index of which the LED is to be updated
 
-    :param updates:  List[Tuple[int, int, int]]    The dictionary of updated for the LED's
+    :param updates: The dictionary of updated for the LED's
     :param delay: the delay between each update
     :return: None
     """
@@ -49,13 +51,19 @@ def update_multiple_pixels(updates, delay: float = 0) -> None:
         time.sleep(delay)
 
 
-def turn_black(delay: float = 1):
+def turn_black(delay: float = 1) -> None:
+    """
+    Turns off all LED's, with debug print statement
+
+    :param delay: delay for after the pixels turn black, default is 1second
+    :return:
+    """
     debug_print("Turning pixels black")
     strip.fill((0, 0, 0))
     time.sleep(delay)
 
 
-def rainbow_cycle(delay: float = 0.002) -> bool:
+def rainbow_cycle(delay: float = 0.002) -> None:
     """
     Main function for rainbow cycle.
     checks to see if any of the values in rgb are outside the range of 0 - 255
@@ -89,7 +97,6 @@ def rainbow_cycle(delay: float = 0.002) -> bool:
 
     if all(0 <= element < 255 for element in rgb):
         debug_print(f"ONE OF THE RGB VALUES WENT OUT OF BOUNDS {rgb}", True)
-        return False
 
     else:
         debug_print("BEGINNING OF RAINBOW CYCLE: (1/2)")
@@ -97,7 +104,6 @@ def rainbow_cycle(delay: float = 0.002) -> bool:
         running_function(2, 1)
         running_function(0, 2)
         debug_print("END OF RAINBOW CYCLE: (2/2)")
-        return True
 
 
 def rainbow_wave(delay: float = 0.03) -> None:
@@ -118,14 +124,14 @@ def rainbow_wave(delay: float = 0.03) -> None:
     ]
 
     def running_function(
-        start_colour,
-        end_colour,
+        start_colour: tuple[int, int, int],
+        end_colour: tuple[int, int, int],
     ) -> None:
         """
         Function that creates the dictionary with the updates needed for the wave
 
-        :param start_colour: TYPE-Tuple. The Start colour of the rainbow gradient
-        :param end_colour: TYPE-Tuple. The End colour of the rainbow gradient
+        :param start_colour: The Start colour of the rainbow gradient
+        :param end_colour: The End colour of the rainbow gradient
         :return: None
         """
 
