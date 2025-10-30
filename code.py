@@ -49,6 +49,12 @@ def update_multiple_pixels(updates, delay: float = 0) -> None:
         time.sleep(delay)
 
 
+def turn_black(delay: float = 1):
+    debug_print("Turning pixels black")
+    strip.fill((0, 0, 0))
+    time.sleep(delay)
+
+
 def rainbow_cycle(delay: float = 0.002) -> bool:
     """
     Main function for rainbow cycle.
@@ -229,12 +235,13 @@ def rainbow_wave_improved(delay: float = 0, num_iterations: int = NUM_PIXELS) ->
 
 
 while True:
-    # debug_print("Turning pixels black")
-    # strip.fill((0, 0, 0))
-    # time.sleep(1)
+    debug_print("BEGINNING OF WHILE LOOP (1/2)")
 
-    debug_print("BEGINNING OF PIXEL SEQUENCE")
-
+    turn_black()
     rainbow_wave()
+    turn_black(0.5)
     rainbow_wave_improved()
+    turn_black(0.5)
     rainbow_cycle()
+
+    debug_print("END OF WHILE LOOP (2/2)")
