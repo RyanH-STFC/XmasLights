@@ -39,6 +39,24 @@ def print_rgb() -> None:
     debug_print(f"Red:{rgb[0]} Green:{rgb[1]} Blue:{rgb[2]}", False)
 
 
+def update_multiple_pixels(updates, delay: float = 0) -> None:
+    """
+    Takes in the strip of LED's and updates each LED's colour value
+    based on the value of the key given
+    The key also is the index of which the LED is to be updated
+
+    :param updates:  Dict[int, Tuple[int, int, int]]    The dictionary of updated for the LED's
+    :param delay: the delay between each update
+    :return: None
+    """
+    for index, colour in updates.items():
+        strip[index] = colour
+
+        debug_print(f"UPDATED {index}: {colour}", False)
+
+        time.sleep(delay)
+
+
 def rainbow_cycle(delay: float = 0.002) -> bool:
     """
     Main function for rainbow cycle.
@@ -82,28 +100,6 @@ def rainbow_cycle(delay: float = 0.002) -> bool:
         running_function(0, 2)
         debug_print("END OF RAINBOW CYCLE: (2/2)")
         return True
-
-
-def update_multiple_pixels(pixel_dict, delay: float = 0) -> None:
-    """
-    Updates the LEDs colour value with the value of a pixels key
-    The pixels key is the index of the LED to be updated
-
-    :param pixel_dict:  Dict[int, Tuple[int, int, int]]
-                        The dictionary of new RGB values for specific pixels
-    :param delay: The delay in seconds between each update
-    :return: None
-    """
-    sorted_keys = sorted(pixel_dict.keys())
-
-    for index in sorted_keys:
-        colour = pixel_dict[index]
-        strip[index] = colour
-
-        debug_print(f"UPDATED {index}: {colour}", False)
-
-        if delay > 0:
-            time.sleep(delay)
 
 
 def rainbow_wave(delay: float = 0.03) -> None:
