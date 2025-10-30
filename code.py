@@ -4,7 +4,6 @@ Script for raspberry pi pico to change neopixel lights on pin GP16
 
 # pylint: disable = import-error, no-member, no-else-return
 import random
-import sys
 import time
 import board
 import neopixel
@@ -90,7 +89,8 @@ def update_multiple_pixels(pixel_dict, delay: float = 0) -> None:
     Updates the LEDs colour value with the value of a pixels key
     The pixels key is the index of the LED to be updated
 
-    :param pixel_dict:  Dict[int, Tuple[int, int, int]]    The dictionary of new RGB values for specific pixels
+    :param pixel_dict:  Dict[int, Tuple[int, int, int]]
+                        The dictionary of new RGB values for specific pixels
     :param delay: The delay in seconds between each update
     :return: None
     """
