@@ -57,7 +57,19 @@ def update_multiple_pixels(updates, delay: float = 0) -> None:
         time.sleep(delay)
 
 
-def rainbow_cycle(delay: float = 0.002) -> bool:
+def turn_black(delay: float = 1) -> None:
+    """
+    Turns off all LED's, with debug print statement
+
+    :param delay: delay for after the pixels turn black, default is 1second
+    :return:
+    """
+    debug_print("Turning pixels black")
+    strip.fill((0, 0, 0))
+    time.sleep(delay)
+
+
+def rainbow_cycle(delay: float = 0.002) -> None:
     """
     Main function for rainbow cycle.
     checks to see if any of the values in rgb are outside the range of 0 - 255
@@ -91,7 +103,6 @@ def rainbow_cycle(delay: float = 0.002) -> bool:
 
     if all(0 <= element < 255 for element in rgb):
         debug_print(f"ONE OF THE RGB VALUES WENT OUT OF BOUNDS {rgb}", True)
-        return False
 
     else:
         debug_print("BEGINNING OF RAINBOW CYCLE: (1/2)")
@@ -99,7 +110,6 @@ def rainbow_cycle(delay: float = 0.002) -> bool:
         running_function(2, 1)
         running_function(0, 2)
         debug_print("END OF RAINBOW CYCLE: (2/2)")
-        return True
 
 
 def rainbow_wave(delay: float = 0.03) -> None:
@@ -120,14 +130,14 @@ def rainbow_wave(delay: float = 0.03) -> None:
     ]
 
     def running_function(
-        start_colour,
-        end_colour,
+        start_colour: tuple[int, int, int],
+        end_colour: tuple[int, int, int],
     ) -> None:
         """
         Function that creates the dictionary with the updates needed for the wave
 
-        :param start_colour: TYPE-Tuple. The Start colour of the rainbow gradient
-        :param end_colour: TYPE-Tuple. The End colour of the rainbow gradient
+        :param start_colour: The Start colour of the rainbow gradient
+        :param end_colour: The End colour of the rainbow gradient
         :return: None
         """
 
