@@ -30,6 +30,24 @@ def debug_print(msg: str, new_line: bool = True) -> None:
         print(msg)
 
 
+def update_multiple_pixels(updates, delay: float = 0) -> None:
+    """
+    Takes in the strip of LED's and updates each LED's colour value
+    based on the value of the key given
+    The key also is the index of which the LED is to be updated
+
+    :param updates:  Dict[int, Tuple[int, int, int]]    The dictionary of updated for the LED's
+    :param delay: the delay between each update
+    :return: None
+    """
+    for index, colour in updates.items():
+        strip[index] = colour
+
+        debug_print(f"UPDATED {index}: {colour}", False)
+
+        time.sleep(delay)
+
+
 def rainbow_cycle(delay: float = 0.002) -> bool:
     """
     Main function for rainbow cycle.
@@ -73,26 +91,6 @@ def rainbow_cycle(delay: float = 0.002) -> bool:
         running_function(0, 2)
         debug_print("END OF RAINBOW CYCLE: (2/2)")
         return True
-
-
-def update_multiple_pixels(pixels, updates, delay: float = 0) -> None:
-    """
-    Takes in the strip of LED's and updates each LED's colour value
-    based on the value of the key given
-    The key also is the index of which the LED is to be updated
-
-    :param pixels: List[Tuple[int, int, int]]    The list of the strip of LED's
-    :param updates:  Dict[int, Tuple[int, int, int]]    The dictionary of updated for the LED's
-    :param delay: the delay between each update
-    :return: None
-    """
-    for index, colour in updates.items():
-        pixels[index] = colour
-
-        debug_print(f"UPDATED {index}: {colour}", False)
-
-        if delay > 0:
-            time.sleep(delay)
 
 
 def rainbow_wave(delay: float = 0.03) -> None:
@@ -146,7 +144,7 @@ def rainbow_wave(delay: float = 0.03) -> None:
 
         debug_print(f"{update_dict}")
 
-        update_multiple_pixels(strip, update_dict, delay)
+        update_multiple_pixels(update_dict, delay)
 
     debug_print("WAVE STARTED (1/2)")
     for i in range(len(colour_sequence) - 1):
@@ -221,7 +219,7 @@ def rainbow_wave_improved(delay: float = 0, num_iterations: int = NUM_PIXELS) ->
     # Shift the gradient multiple times
     for _ in range(num_iterations):
         # Update the strip with the current gradient
-        update_multiple_pixels(strip, rainbow_gradient)
+        update_multiple_pixels(rainbow_gradient)
 
         # Rotate the gradient by shifting color values
         rotated_gradient = {}
