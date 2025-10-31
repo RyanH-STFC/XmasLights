@@ -14,7 +14,6 @@ NUM_PIXELS = 256
 PIXEL_BRIGHTNESS = 0.1
 
 strip = neopixel.NeoPixel(PIXEL_PIN, NUM_PIXELS, brightness=PIXEL_BRIGHTNESS)
-rgb = [255, 0, 0]
 DEBUG_PRINT = True
 
 
@@ -30,14 +29,6 @@ def debug_print(msg, new_line=True):
         print(msg.upper(), "\n")
     elif DEBUG_PRINT:
         print(msg.upper())
-
-
-def print_rgb() -> None:
-    """
-    prints rgb values in format "Red:{} Green:{} Blue:{}"
-    :return: None
-    """
-    debug_print(f"Red:{rgb[0]} Green:{rgb[1]} Blue:{rgb[2]}", False)
 
 
 def update_multiple_pixels(updates, delay=0.0):
@@ -71,46 +62,40 @@ def turn_black(delay=1.0):
 
 def rainbow_cycle(delay=0.002):
     """
-    Main function for rainbow cycle.
-    checks to see if any of the values in rgb are outside the range of 0 - 255
-    if not then it runs running_function
-
-    :param delay: float,  delay between changing the values of rgb
-    (speed at which the colours change) default is 0.002 seconds
-    :return: None
+    Main function for rainbow cycle using update_multiple_pixels.
+    :param delay: float, delay between colour steps
     """
+    debug_print("BEGINNING OF RAINBOW CYCLE (1/2)")
 
-    def running_function(
-        increment_index,
-        decrement_index,
-    ):
+    # Use a local rgb state to avoid mutating globals
+    rgb_local = [255, 0, 0]
+
+    def running_function(increment_index, decrement_index):
         """
-        The function that actually changes the colours of the LEDs
-
-        :param increment_index: int,   the index of rgb to be incremented by 1 each loop
-        :param decrement_index: int,   the index of rgb to be decremented by 1 each loop
-        :return: None
+        Increment one channel and decrement another over 255 steps,
+        updating all pixels to the current rgb_local value each step.
         """
         for _ in range(255):
             if increment_index is not None:
-                rgb[increment_index] += 1
+                rgb_local[increment_index] = min(255, rgb_local[increment_index] + 1)
             if decrement_index is not None:
-                rgb[decrement_index] -= 1
+                rgb_local[decrement_index] = max(0, rgb_local[decrement_index] - 1)
 
-            print_rgb()
+            # colour_list = [tuple(rgb_local) for _ in range(NUM_PIXELS)]
 
-            strip.fill(tuple(rgb))
+            strip.fill(rgb_local)
             time.sleep(delay)
 
-    if all(0 <= element < 255 for element in rgb):
-        debug_print(f"ONE OF THE RGB VALUES WENT OUT OF BOUNDS {rgb}", True)
+    # Validate rgb_local is within 0..255
+    if not all(0 <= element <= 255 for element in rgb_local):
+        debug_print(f"ONE OF THE RGB VALUES WENT OUT OF BOUNDS {rgb_local}", True)
+        return
 
-    else:
-        debug_print("BEGINNING OF RAINBOW CYCLE: (1/2)")
-        running_function(1, 0)
-        running_function(2, 1)
-        running_function(0, 2)
-        debug_print("END OF RAINBOW CYCLE: (2/2)")
+    running_function(1, 0)
+    running_function(2, 1)
+    running_function(0, 2)
+
+    debug_print("END OF RAINBOW CYCLE (2/2)")
 
 
 def rainbow_wave(delay=0.03):
@@ -238,7 +223,7 @@ def rainbow_wave_improved(delay=0.0, num_iterations=NUM_PIXELS):
 
 
 def sparkle_pixels(
-    speed=0.33, colour=(255, 255, 255), intensity=0.33, cycles: int = 10
+    speed=0.33, colour=(255, 255, 255), intensity=0.33, cycles: int = 10.0
 ):
     """
     Create a random sparkling effect
@@ -247,7 +232,7 @@ def sparkle_pixels(
     :param colour: Tuple[int, int, int],     RGB colour. default is white (255,255,255)
     :param intensity: float,    Percentage of pixels to light up. default is 0.5
      (50% of amount of pixels at a max)
-    :param cycles: int,    Number of sparkle cycles, default is 10
+    :param cycles: int,    Number of sparkle cycles, default is 10.0
     :return: None
     """
 
@@ -270,13 +255,14 @@ def sparkle_pixels(
 while True:
     debug_print("BEGINNING OF WHILE LOOP (1/2)")
 
-    turn_black()
-    sparkle_pixels(cycles=15)
+    turn_black(0.5)
+    sparkle_pixels()
+    turn_black(0.25)
     rainbow_cycle()
-    turn_black(0.5)
+    turn_black(0.25)
     rainbow_wave()
-    turn_black(0.5)
+    turn_black(0.25)
     rainbow_wave_improved()
-    turn_black(0.5)
+    turn_black(0.25)
 
     debug_print("END OF WHILE LOOP (2/2)")
