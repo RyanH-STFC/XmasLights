@@ -4,9 +4,10 @@ Script for raspberry pi pico to change neopixel lights on pin GP16
 
 # pylint: disable = import-error, no-member, no-else-return
 import time
+import random
 import board
 import neopixel
-import random
+
 
 PIXEL_PIN = board.GP16
 NUM_PIXELS = 30
