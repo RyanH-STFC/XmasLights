@@ -26,9 +26,9 @@ def debug_print(msg, new_line=True):
     :return: None
     """
     if DEBUG_PRINT and new_line:
-        print(msg, "\n")
+        print(msg.upper(), "\n")
     elif DEBUG_PRINT:
-        print(msg)
+        print(msg.upper())
 
 
 def update_multiple_pixels(updates, delay=0.0):
