@@ -6,6 +6,7 @@ Script for raspberry pi pico to change neopixel lights on pin GP16
 import time
 import board
 import neopixel
+import random
 
 PIXEL_PIN = board.GP16
 NUM_PIXELS = 30
@@ -39,6 +40,7 @@ def update_multiple_pixels(updates, delay=0.0):
     :param delay: float,  the delay between each update default is 0 seconds
     :return: None or List[tuple[int, int, int]]
     """
+    debug_print(f"List to be updated:    {updates}")
 
     for index, colour in enumerate(updates):
         strip[index] = colour
@@ -170,6 +172,7 @@ def rainbow_wave_improved(delay=0.0, num_iterations=NUM_PIXELS):
 
     :param delay: float,   The speed of the wave movement, default is 0.0
     :param num_iterations: int,  Number of times to shift the gradient, default is number of pixels
+    :return: None
     """
     debug_print("Creating Fixed Rainbow Gradient")
 
@@ -239,14 +242,46 @@ def rainbow_wave_improved(delay=0.0, num_iterations=NUM_PIXELS):
     debug_print("Rainbow Wave Finished")
 
 
+def sparkle_pixels(
+    speed=0.33, colour=(255, 255, 255), intensity=0.33, cycles: int = 10
+):
+    """
+    Create a random sparkling effect
+
+    :param speed: float,   Time in seconds a set of sparkles last. default is 0.33
+    :param colour: Tuple[int, int, int],     RGB colour. default is white (255,255,255)
+    :param intensity: float,    Percentage of pixels to light up. default is 0.5
+     (50% of amount of pixels at a max)
+    :param cycles: int,    Number of sparkle cycles, default is 10
+    :return: None
+    """
+
+    for c in range(cycles):
+        debug_print(f"sparkling cycle {c} of {cycles}", True)
+
+        pixel_list = [(0, 0, 0) for _ in range(NUM_PIXELS)]
+        for _ in range(
+            random.randint(
+                round((NUM_PIXELS * intensity) / 2), round(NUM_PIXELS * intensity)
+            )
+        ):
+            random_pixel = random.randint(0, NUM_PIXELS - 1)
+            pixel_list[random_pixel] = colour
+
+        update_multiple_pixels(pixel_list)
+        time.sleep(speed)
+
+
 while True:
     debug_print("BEGINNING OF WHILE LOOP (1/2)")
 
     turn_black()
+    sparkle_pixels(cycles=15)
+    rainbow_cycle()
+    turn_black(0.5)
     rainbow_wave()
     turn_black(0.5)
     rainbow_wave_improved()
     turn_black(0.5)
-    rainbow_cycle()
 
     debug_print("END OF WHILE LOOP (2/2)")
