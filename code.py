@@ -2,7 +2,7 @@
 Script for raspberry pi pico to change neopixel lights on pin GP16
 """
 
-# pylint: disable = import-error, no-member, no-else-return
+# pylint: disable = import-error, no-member, no-else-return, too-many-locals
 import time
 import random
 import board
@@ -67,7 +67,6 @@ def rainbow_cycle(delay=0.002):
     """
     debug_print("BEGINNING OF RAINBOW CYCLE (1/2)")
 
-    # Use a local rgb state to avoid mutating globals
     rgb_local = [255, 0, 0]
 
     def running_function(increment_index, decrement_index):
@@ -75,18 +74,18 @@ def rainbow_cycle(delay=0.002):
         Increment one channel and decrement another over 255 steps,
         updating all pixels to the current rgb_local value each step.
         """
-        colour_list = []
+
         for _ in range(255):
             if increment_index is not None:
                 rgb_local[increment_index] = min(255, rgb_local[increment_index] + 1)
             if decrement_index is not None:
                 rgb_local[decrement_index] = max(0, rgb_local[decrement_index] - 1)
 
-            colour_list = [tuple(rgb_local) for _ in range(NUM_PIXELS)]
+            # colour_list = [tuple(rgb_local) for _ in range(NUM_PIXELS)]
 
             strip.fill(rgb_local)
+            time.sleep(delay)
 
-    # Validate rgb_local is within 0..255
     if not all(0 <= element <= 255 for element in rgb_local):
         debug_print(f"ONE OF THE RGB VALUES WENT OUT OF BOUNDS {rgb_local}", True)
         return
