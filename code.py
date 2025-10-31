@@ -2,7 +2,7 @@
 Script for raspberry pi pico to change neopixel lights on pin GP16
 """
 
-# pylint: disable = import-error, no-member, no-else-return
+# pylint: disable = import-error, no-member, no-else-return, too-many-locals
 import random
 import time
 import board
@@ -53,8 +53,6 @@ def update_multiple_pixels(updates, delay=0.0):
 
     for index, colour in enumerate(updates):
         strip[index] = colour
-
-        debug_print(f"UPDATED {index}: {colour}", False)
 
         time.sleep(delay)
 
@@ -119,11 +117,11 @@ def rainbow_wave(delay=0.03):
     """
     Creates a wave of rainbow gradient colours.
 
-    :param delay: float,  The speed at which the rainbow gradient colours
-    change down the strip, default is 0.03
+    :param delay: float, speed at which the rainbow gradient moves down the strip
     :return: None
     """
-    debug_print("Creating Colour sequence")
+    debug_print("Creating Colour sequence (optimized)")
+
     colour_sequence = [
         (255, 0, 0),  # Red
         (255, 255, 0),  # Yellow
@@ -133,45 +131,33 @@ def rainbow_wave(delay=0.03):
         (255, 0, 255),  # Magenta
     ]
 
-    def running_function(
-        start_colour,
-        end_colour,
-    ):
-        """
-        Function that creates the dictionary with the updates needed for the wave
+    num_pixels_take_one = NUM_PIXELS - 1 if NUM_PIXELS > 1 else 1
 
-        :param start_colour: tuple[int, int, int],   The Start colour of the rainbow gradient
-        :param end_colour: tuple[int, int, int],   The End colour of the rainbow gradient
-        :return: None
-        """
+    def build_gradient(start_colour, end_colour):
+        """Return list of NUM_PIXELS tuples forming a linear gradient between two colours."""
+        sr, sg, sb = start_colour
+        er, eg, eb = end_colour
 
-        debug_print("Creating update dictionary", False)
+        step_r = (er - sr) / num_pixels_take_one
+        step_g = (eg - sg) / num_pixels_take_one
+        step_b = (eb - sb) / num_pixels_take_one
 
-        update_list = [
-            (
-                int(
-                    start_colour[0]
-                    + (end_colour[0] - start_colour[0]) * pixel / (NUM_PIXELS - 1)
-                ),
-                int(
-                    start_colour[1]
-                    + (end_colour[1] - start_colour[1]) * pixel / (NUM_PIXELS - 1)
-                ),
-                int(
-                    start_colour[2]
-                    + (end_colour[2] - start_colour[2]) * pixel / (NUM_PIXELS - 1)
-                ),
-            )
-            for pixel in range(NUM_PIXELS)
-        ]
-
-        debug_print(f"{update_list}")
-
-        update_multiple_pixels(update_list, delay)
+        gradient = []
+        for pixel in range(NUM_PIXELS):
+            r = int(sr + step_r * pixel)
+            g = int(sg + step_g * pixel)
+            b = int(sb + step_b * pixel)
+            gradient.append((r, g, b))
+        return gradient
 
     debug_print("WAVE STARTED (1/2)")
+    gradients = []
     for i in range(len(colour_sequence) - 1):
-        running_function(colour_sequence[i], colour_sequence[i + 1])
+        gradients.append(build_gradient(colour_sequence[i], colour_sequence[i + 1]))
+
+    for grad in gradients:
+        update_multiple_pixels(grad, delay)
+
     debug_print("WAVE FINISHED (2/2)")
 
 
