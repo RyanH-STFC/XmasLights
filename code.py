@@ -45,11 +45,12 @@ def update_multiple_pixels(updates, delay: float = 0) -> None:
     based on the value of the key given
     The key also is the index of which the LED is to be updated
 
-    :param updates:  Dict[int, Tuple[int, int, int]]    The dictionary of updated for the LED's
+    :param updates:  List[Tuple[int, int, int]]    The dictionary of updated for the LED's
     :param delay: the delay between each update
     :return: None
     """
-    for index, colour in updates.items():
+
+    for index, colour in enumerate(updates):
         strip[index] = colour
 
         debug_print(f"UPDATED {index}: {colour}", False)
@@ -133,8 +134,8 @@ def rainbow_wave(delay: float = 0.03) -> None:
 
         debug_print("Creating update dictionary", False)
 
-        update_dict = {
-            pixel: (
+        update_list = [
+            (
                 int(
                     start_colour[0]
                     + (end_colour[0] - start_colour[0]) * pixel / (NUM_PIXELS - 1)
@@ -149,11 +150,11 @@ def rainbow_wave(delay: float = 0.03) -> None:
                 ),
             )
             for pixel in range(NUM_PIXELS)
-        }
+        ]
 
-        debug_print(f"{update_dict}")
+        debug_print(f"{update_list}")
 
-        update_multiple_pixels(update_dict, delay)
+        update_multiple_pixels(update_list, delay)
 
     debug_print("WAVE STARTED (1/2)")
     for i in range(len(colour_sequence) - 1):
@@ -170,20 +171,20 @@ def rainbow_wave_improved(delay: float = 0, num_iterations: int = NUM_PIXELS) ->
     """
     debug_print("Creating Fixed Rainbow Gradient")
 
-    def generate_fixed_rainbow_gradient() -> dict:
+    def generate_fixed_rainbow_gradient():
         """
         Generate a complete rainbow gradient across the entire strip.
 
-        :return: Dictionary of pixel colors
+        :return: List of pixel colors
         """
-        update_dict = {}
+        update_list = []
         for led in range(NUM_PIXELS):
             # Normalize pixel position to create a smooth rainbow gradient
             hue = led / NUM_PIXELS
             r, g, b = hsv_to_rgb(hue, 1.0, 1.0)
-            update_dict[led] = (int(r * 255), int(g * 255), int(b * 255))
+            update_list.append((int(r * 255), int(g * 255), int(b * 255)))
 
-        return update_dict
+        return update_list
 
     def hsv_to_rgb(hue: float, saturation: float, value: float) -> tuple:
         """
@@ -230,11 +231,8 @@ def rainbow_wave_improved(delay: float = 0, num_iterations: int = NUM_PIXELS) ->
         update_multiple_pixels(rainbow_gradient)
 
         # Rotate the gradient by shifting color values
-        rotated_gradient = {}
-        for pixel, color in rainbow_gradient.items():
-            rotated_gradient[(pixel + 1) % NUM_PIXELS] = color
+        rainbow_gradient = rainbow_gradient[1:] + rainbow_gradient[:1]
         time.sleep(delay)
-        rainbow_gradient = rotated_gradient
 
     debug_print("Rainbow Wave Finished")
 
