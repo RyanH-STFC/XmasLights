@@ -58,6 +58,17 @@ def update_multiple_pixels(updates, delay: float = 0) -> None:
         time.sleep(delay)
 
 
+def turn_black(delay: float = 1):
+    """
+    Turns off all LED's, with debug print statement
+    :param delay: float,  delay for after the pixels turn black, default is 1.0 seconds
+    :return: None
+    """
+    debug_print("Turning pixels black")
+    strip.fill((0, 0, 0))
+    time.sleep(delay)
+
+
 def rainbow_cycle(delay: float = 0.002) -> bool:
     """
     Main function for rainbow cycle.
@@ -270,13 +281,13 @@ def sparkle_pixels(
 
 
 while True:
-    # debug_print("Turning pixels black")
-    # strip.fill((0, 0, 0))
-    # time.sleep(1)
+    debug_print("BEGINNING OF WHILE LOOP (1/2)")
 
-    debug_print("BEGINNING OF PIXEL SEQUENCE")
+    turn_black()
+    rainbow_wave()
+    turn_black(0.5)
+    rainbow_wave_improved()
+    turn_black(0.5)
+    rainbow_cycle()
 
-    sparkle_pixels(colour=(255, 200, 50), cycles=30)
-    # rainbow_wave()
-    # rainbow_wave_improved()
-    # rainbow_cycle()
+    debug_print("END OF WHILE LOOP (2/2)")
