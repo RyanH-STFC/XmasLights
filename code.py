@@ -59,6 +59,11 @@ def update_multiple_pixels(updates, delay: float = 0) -> None:
 
 
 def turn_black(delay: float = 1):
+    """
+    Turns off all LED's, with debug print statement
+    :param delay: float,  delay for after the pixels turn black, default is 1.0 seconds
+    :return: None
+    """
     debug_print("Turning pixels black")
     strip.fill((0, 0, 0))
     time.sleep(delay)
