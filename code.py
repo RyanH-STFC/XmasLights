@@ -17,15 +17,15 @@ rgb = [255, 0, 0]
 DEBUG_PRINT = True
 
 
-def debug_print(msg: str, new_line: bool = True) -> None:
+def debug_print(msg, new_line=True):
     """
     Prints messages to stdout. for debugging purposes.
 
-    :param msg: The message to print
-    :param new_line: Bool value, True to create a new line after the message. Default is True
+    :param msg: str,  The message to print
+    :param new_line: bool,  To create a space underneath the message default is True
     :return: None
     """
-    if DEBUG_PRINT & new_line:
+    if DEBUG_PRINT and new_line:
         print(msg, "\n")
     elif DEBUG_PRINT:
         print(msg)
@@ -39,15 +39,14 @@ def print_rgb() -> None:
     debug_print(f"Red:{rgb[0]} Green:{rgb[1]} Blue:{rgb[2]}", False)
 
 
-def update_multiple_pixels(updates, delay: float = 0) -> None:
+def update_multiple_pixels(updates, delay=0.0):
     """
-    Takes in the strip of LED's and updates each LED's colour value
-    based on the value of the key given
-    The key also is the index of which the LED is to be updated
+    Takes a list and goes through it and changes the pixels colour at the index of this #
+    with the value at that element.
 
-    :param updates:  List[Tuple[int, int, int]]    The dictionary of updated for the LED's
-    :param delay: the delay between each update
-    :return: None
+    :param updates: list[tuple[int, int, int]],  The list of updated for the LED's
+    :param delay: float,  the delay between each update default is 0 seconds
+    :return: None or List[tuple[int, int, int]]
     """
 
     for index, colour in enumerate(updates):
@@ -58,9 +57,10 @@ def update_multiple_pixels(updates, delay: float = 0) -> None:
         time.sleep(delay)
 
 
-def turn_black(delay: float = 1):
+def turn_black(delay=1.0):
     """
     Turns off all LED's, with debug print statement
+
     :param delay: float,  delay for after the pixels turn black, default is 1.0 seconds
     :return: None
     """
@@ -69,25 +69,26 @@ def turn_black(delay: float = 1):
     time.sleep(delay)
 
 
-def rainbow_cycle(delay: float = 0.002) -> bool:
+def rainbow_cycle(delay=0.002):
     """
     Main function for rainbow cycle.
     checks to see if any of the values in rgb are outside the range of 0 - 255
     if not then it runs running_function
 
-    :param delay: delay between changing the values of rgb (speed at which the colours change)
-    :return: True if it worked, False otherwise
+    :param delay: float,  delay between changing the values of rgb
+    (speed at which the colours change) default is 0.002 seconds
+    :return: None
     """
 
     def running_function(
-        increment_index: int = None,
-        decrement_index: int = None,
-    ) -> None:
+        increment_index,
+        decrement_index,
+    ):
         """
         The function that actually changes the colours of the LEDs
 
-        :param increment_index: the index of rgb to be incremented by 1 each loop
-        :param decrement_index: the index of rgb to be decremented by 1 each loop
+        :param increment_index: int,   the index of rgb to be incremented by 1 each loop
+        :param decrement_index: int,   the index of rgb to be decremented by 1 each loop
         :return: None
         """
         for _ in range(255):
@@ -103,7 +104,6 @@ def rainbow_cycle(delay: float = 0.002) -> bool:
 
     if all(0 <= element < 255 for element in rgb):
         debug_print(f"ONE OF THE RGB VALUES WENT OUT OF BOUNDS {rgb}", True)
-        return False
 
     else:
         debug_print("BEGINNING OF RAINBOW CYCLE: (1/2)")
@@ -111,14 +111,14 @@ def rainbow_cycle(delay: float = 0.002) -> bool:
         running_function(2, 1)
         running_function(0, 2)
         debug_print("END OF RAINBOW CYCLE: (2/2)")
-        return True
 
 
-def rainbow_wave(delay: float = 0.03) -> None:
+def rainbow_wave(delay=0.03):
     """
     Creates a wave of rainbow gradient colours.
 
-    :param delay: The speed at which the rainbow gradient colours change down the strip
+    :param delay: float,  The speed at which the rainbow gradient colours
+    change down the strip, default is 0.03
     :return: None
     """
     debug_print("Creating Colour sequence")
@@ -134,12 +134,12 @@ def rainbow_wave(delay: float = 0.03) -> None:
     def running_function(
         start_colour,
         end_colour,
-    ) -> None:
+    ):
         """
         Function that creates the dictionary with the updates needed for the wave
 
-        :param start_colour: TYPE-Tuple. The Start colour of the rainbow gradient
-        :param end_colour: TYPE-Tuple. The End colour of the rainbow gradient
+        :param start_colour: tuple[int, int, int],   The Start colour of the rainbow gradient
+        :param end_colour: tuple[int, int, int],   The End colour of the rainbow gradient
         :return: None
         """
 
@@ -173,12 +173,12 @@ def rainbow_wave(delay: float = 0.03) -> None:
     debug_print("WAVE FINISHED (2/2)")
 
 
-def rainbow_wave_improved(delay: float = 0, num_iterations: int = NUM_PIXELS) -> None:
+def rainbow_wave_improved(delay=0.0, num_iterations=NUM_PIXELS):
     """
     Create a fixed rainbow gradient that moves across the LED strip.
 
-    :param delay: The speed of the wave movement
-    :param num_iterations: Number of times to shift the gradient
+    :param delay: float,   The speed of the wave movement, default is 0.0
+    :param num_iterations: int,  Number of times to shift the gradient, default is number of pixels
     """
     debug_print("Creating Fixed Rainbow Gradient")
 
