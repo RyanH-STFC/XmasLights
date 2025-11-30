@@ -8,6 +8,7 @@ import time
 import board
 import neopixel
 import digitalio
+import asyncio
 
 PIXEL_PIN = board.GP16
 PIXEL_BRIGHTNESS = 0.05
@@ -35,15 +36,14 @@ def debug_print(msg, new_line=True):
     elif DEBUG_PRINT:
         print(msg.upper())
 
-def red():
+async def red():
     return strip.fill((250, 0, 0))
 
-
-def green():
+async def green():
     return strip.fill((0, 250, 0))
 
 # pylint: disable = consider-iterating-dictionary
-def _update_pattern_frame_amount(key, cycles, returning=True):
+async def _update_pattern_frame_amount(key, cycles, returning=True):
     if key in pattern_frame_amounts.keys():
         if pattern_frame_amounts[key] != cycles:
             debug_print(f'creating a new key "{key}" with {cycles}')
@@ -60,7 +60,7 @@ def _update_pattern_frame_amount(key, cycles, returning=True):
     return pattern_frame_amounts
 
 
-def update_multiple_pixels(updates, pace=0.0):
+async def update_multiple_pixels(updates, pace=0.0):
     """
     Takes a list and goes through it and changes the pixels colour at the index of this #
     with the value at that element.
@@ -73,7 +73,7 @@ def update_multiple_pixels(updates, pace=0.0):
     for index, colour in enumerate(updates):
         strip[index] = colour
 
-        time.sleep(pace)
+        await asyncio.sleep(pace)
 
 
 def turn_black(delay=1.0):
@@ -241,7 +241,7 @@ def rainbow_cycle(delay=0.002, returning=False, specific_frame=None):
     return None
 
 
-def rainbow_wave(delay=0.03, returning=False, specific_frame=None):
+async def rainbow_wave(delay=0.03, returning=False, specific_frame=None):
     """
     Creates a wave of rainbow gradient colours.
 
@@ -250,6 +250,7 @@ def rainbow_wave(delay=0.03, returning=False, specific_frame=None):
     :param specific_frame: int, generate only a specific frame number
     :return: None or List[tuple] or tuple
     """
+    debug_print("rainbow_wave BEGUN")
 
     colour_sequence = [
         (255, 0, 0),  # Red
@@ -263,9 +264,9 @@ def rainbow_wave(delay=0.03, returning=False, specific_frame=None):
     num_pixels_take_one = NUM_PIXELS - 1 if NUM_PIXELS > 1 else 1
 
     cycles = len(colour_sequence) - 1
-    _update_pattern_frame_amount("rainbow_wave", cycles, returning)
+    await _update_pattern_frame_amount("rainbow_wave", cycles, returning)
 
-    def build_gradient(start_colour, end_colour):
+    async def build_gradient(start_colour, end_colour):
         """Return list of NUM_PIXELS tuples forming a linear gradient between two colours."""
         sr, sg, sb = start_colour
         er, eg, eb = end_colour
@@ -280,6 +281,7 @@ def rainbow_wave(delay=0.03, returning=False, specific_frame=None):
             g = int(sg + step_g * pixel)
             b = int(sb + step_b * pixel)
             gradient.append((r, g, b))
+            await asyncio.sleep(0.1)
         return gradient
 
     if specific_frame is not None:
@@ -300,10 +302,10 @@ def rainbow_wave(delay=0.03, returning=False, specific_frame=None):
     if not returning:
         debug_print("WAVE STARTED (1/2)")
         for i in range(len(colour_sequence) - 1):
-            update_multiple_pixels(
-                build_gradient(colour_sequence[i], colour_sequence[i + 1]), delay
+            await update_multiple_pixels(
+                await build_gradient(colour_sequence[i], colour_sequence[i + 1]), delay
             )
-
+            await asyncio.sleep(0.1)
         debug_print("WAVE FINISHED (2/2)")
     return None
 
@@ -392,7 +394,7 @@ def rainbow_wave_improved(
 
 
 # pylint: disable = too-many-arguments, too-many-positional-arguments
-def sparkle_pixels(
+async def sparkle_pixels(
     speed=0.33,
     colour=(255, 255, 255),
     intensity=0.33,
@@ -413,23 +415,10 @@ def sparkle_pixels(
     :return: None or Sequence[tuple[int, int, int]]
     """
 
-    _update_pattern_frame_amount("sparkle_pixels", (cycles * 3) / cycles, returning)
+    await _update_pattern_frame_amount("sparkle_pixels", (cycles * 3) / cycles, returning)
 
     # If specific_frame is not None or returning is True, generate the pixel list without updating
-    if specific_frame is not None or returning:
-        # Create a pixel list for this cycle
-        pixel_list = [(0, 0, 0) for _ in range(NUM_PIXELS)]
-        for _ in range(
-            random.randint(
-                round((NUM_PIXELS * intensity) / 2), round(NUM_PIXELS * intensity)
-            )
-        ):
-            random_pixel = random.randint(0, NUM_PIXELS - 1)
-            pixel_list[random_pixel] = colour
-
-        return pixel_list
-
-    # Only update pixels if not returning and no specific frame
+    # Create a pixel list for this cycle
     pixel_list = [(0, 0, 0) for _ in range(NUM_PIXELS)]
     for _ in range(
         random.randint(
@@ -438,9 +427,13 @@ def sparkle_pixels(
     ):
         random_pixel = random.randint(0, NUM_PIXELS - 1)
         pixel_list[random_pixel] = colour
+        await asyncio.sleep(0.1)
 
-    update_multiple_pixels(pixel_list)
-    time.sleep(speed)
+    if specific_frame is not None or returning:
+        return pixel_list
+
+    await update_multiple_pixels(pixel_list)
+    await asyncio.sleep(speed)
     return None
 
 
@@ -458,28 +451,37 @@ PATTERNS = [
     rainbow_wave_improved,
     rainbow_cycle,
 ]
-current_pattern_index = 0
+CURRENT_PATTERN_INDEX = 0
 
-def next_pattern():
-    global current_pattern_index
-    current_pattern_index = (current_pattern_index + 1) % len(PATTERNS)
+async def pattern_runner(pattern_func):
+    while True:
+        await pattern_func()
+        await asyncio.sleep(0.01)
 
-    return PATTERNS[current_pattern_index]
+        if not button.value:
+            break
 
-while True:
-    debug_print("BEGINNING OF WHILE LOOP (1/2)")
-    current_pattern = PATTERNS[current_pattern_index]()
+async def main():
+    global CURRENT_PATTERN_INDEX
 
-    if not button.value:
-        time.sleep(0.2)  # Debounce delay
-        current_pattern = next_pattern()
-        debug_print(f"Switched to pattern: {current_pattern.__name__}")
+    while True:
+        debug_print("BEGINNING OF WHILE LOOP (1/2)")
+        current_pattern = PATTERNS[CURRENT_PATTERN_INDEX]
 
-    # Run the current pattern
-    #current_pattern()
+        await pattern_runner(current_pattern)
 
-    debug_print("END OF WHILE LOOP (2/2)")
+        if not button.value:
+            await asyncio.sleep(0.2)  # Debounce delay
+            CURRENT_PATTERN_INDEX = (CURRENT_PATTERN_INDEX + 1) % len(PATTERNS)
+            debug_print(f"Switched to pattern: {current_pattern.__name__}")
 
+            await asyncio.sleep(0.5)
+
+        debug_print("END OF WHILE LOOP (2/2)")
+
+asyncio.run(main())
+
+"""
 while True:
     debug_print("BEGINNING OF WHILE LOOP (1/2)")
     turn_black()
@@ -498,3 +500,4 @@ while True:
     merge_patterns(sparkle_pixels, rainbow_wave)
 
     debug_print("END OF WHILE LOOP (2/2)")
+"""
