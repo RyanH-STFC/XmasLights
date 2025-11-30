@@ -7,17 +7,40 @@ import random
 import time
 import board
 import neopixel
-
+import digitalio
 
 PIXEL_PIN = board.GP16
-NUM_PIXELS = 30
-
 PIXEL_BRIGHTNESS = 0.05
-pattern_frame_amounts = {}
-
+NUM_PIXELS = 30
 strip = neopixel.NeoPixel(PIXEL_PIN, NUM_PIXELS, brightness=PIXEL_BRIGHTNESS)
+
+BUTTON_PIN = board.GP14
+button = digitalio.DigitalInOut(BUTTON_PIN)
+button.direction = digitalio.Direction.INPUT
+button.pull = digitalio.Pull.UP
+
+pattern_frame_amounts = {}
 DEBUG_PRINT = True
 
+def debug_print(msg, new_line=True):
+    """
+    Prints messages to stdout. for debugging purposes.
+
+    :param msg: str,  The message to print
+    :param new_line: bool,  To create a space underneath the message default is True
+    :return: None
+    """
+    if DEBUG_PRINT and new_line:
+        print(msg.upper(), "\n")
+    elif DEBUG_PRINT:
+        print(msg.upper())
+
+def red():
+    return strip.fill((250, 0, 0))
+
+
+def green():
+    return strip.fill((0, 250, 0))
 
 # pylint: disable = consider-iterating-dictionary
 def _update_pattern_frame_amount(key, cycles, returning=True):
@@ -35,20 +58,6 @@ def _update_pattern_frame_amount(key, cycles, returning=True):
     if not returning:
         return None
     return pattern_frame_amounts
-
-
-def debug_print(msg, new_line=True):
-    """
-    Prints messages to stdout. for debugging purposes.
-
-    :param msg: str,  The message to print
-    :param new_line: bool,  To create a space underneath the message default is True
-    :return: None
-    """
-    if DEBUG_PRINT and new_line:
-        print(msg.upper(), "\n")
-    elif DEBUG_PRINT:
-        print(msg.upper())
 
 
 def update_multiple_pixels(updates, pace=0.0):
@@ -441,6 +450,35 @@ def sparkle_pixels(
 # rainbow_wave_improved()
 # rainbow_cycle()
 
+PATTERNS = [
+    red,
+    green,
+    sparkle_pixels,
+    rainbow_wave,
+    rainbow_wave_improved,
+    rainbow_cycle,
+]
+current_pattern_index = 0
+
+def next_pattern():
+    global current_pattern_index
+    current_pattern_index = (current_pattern_index + 1) % len(PATTERNS)
+
+    return PATTERNS[current_pattern_index]
+
+while True:
+    debug_print("BEGINNING OF WHILE LOOP (1/2)")
+    current_pattern = PATTERNS[current_pattern_index]()
+
+    if not button.value:
+        time.sleep(0.2)  # Debounce delay
+        current_pattern = next_pattern()
+        debug_print(f"Switched to pattern: {current_pattern.__name__}")
+
+    # Run the current pattern
+    #current_pattern()
+
+    debug_print("END OF WHILE LOOP (2/2)")
 
 while True:
     debug_print("BEGINNING OF WHILE LOOP (1/2)")
