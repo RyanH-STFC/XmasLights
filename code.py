@@ -5,10 +5,10 @@ Script for raspberry pi pico to change neopixel lights on pin GP16
 # pylint: disable = import-error, no-member, no-else-return, too-many-locals
 import random
 import time
+import asyncio
 import board
 import neopixel
 import digitalio
-import asyncio
 
 PIXEL_PIN = board.GP16
 PIXEL_BRIGHTNESS = 0.05
@@ -39,10 +39,18 @@ def debug_print(msg, new_line=True):
 
 
 async def red():
+    """
+    Turns lights red
+    :return: None
+    """
     return strip.fill((250, 0, 0))
 
 
 async def green():
+    """
+    Turns lights green
+    :return: None
+    """
     return strip.fill((0, 250, 0))
 
 
@@ -458,6 +466,11 @@ CURRENT_PATTERN_INDEX = 0
 
 
 async def pattern_runner(pattern_func):
+    """
+    Runs pattern_func until button pressed
+    :param pattern_func: function to run
+    :return:
+    """
     while True:
         await pattern_func()
 
@@ -466,6 +479,7 @@ async def pattern_runner(pattern_func):
 
 
 async def main():
+    # pylint: disable = global-statement
     global CURRENT_PATTERN_INDEX
 
     while True:
@@ -475,33 +489,10 @@ async def main():
         debug_print(f"Switched to pattern: {current_pattern.__name__}")
 
         await pattern_runner(current_pattern)
-
-        if not button.value:
-            await asyncio.sleep(0.2)
-            CURRENT_PATTERN_INDEX = (CURRENT_PATTERN_INDEX + 1) % (len(PATTERNS) - 1)
+        await asyncio.sleep(0.2)
+        CURRENT_PATTERN_INDEX = (CURRENT_PATTERN_INDEX + 1) % (len(PATTERNS) - 1)
 
         debug_print("END OF WHILE LOOP (2/2)")
 
 
 asyncio.run(main())
-
-"""
-while True:
-    debug_print("BEGINNING OF WHILE LOOP (1/2)")
-    turn_black()
-
-    # print(rainbow_cycle(returning=True))
-    rainbow_wave(0)
-    sparkle_pixels(0)
-    rainbow_cycle(0)
-    rainbow_wave_improved(0)
-
-    merge_patterns(rainbow_cycle, rainbow_wave_improved, "combine", 0.2)
-    merge_patterns(sparkle_pixels, rainbow_cycle)
-    merge_patterns(rainbow_cycle, rainbow_wave, "combine", 0.2)
-    merge_patterns(sparkle_pixels, rainbow_wave_improved)
-    merge_patterns(rainbow_wave_improved, sparkle_pixels, "combine", 0.2)
-    merge_patterns(sparkle_pixels, rainbow_wave)
-
-    debug_print("END OF WHILE LOOP (2/2)")
-"""
