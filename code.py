@@ -182,7 +182,7 @@ def merge_patterns(
             break
 
 
-def rainbow_cycle(delay=0.002, returning=False, specific_frame=None):
+async def rainbow_cycle(delay=0.002, returning=False, specific_frame=None):
     """
     Rainbow cycle with option to generate a specific frame.
 
@@ -191,23 +191,23 @@ def rainbow_cycle(delay=0.002, returning=False, specific_frame=None):
     :param specific_frame: int, generate only a specific frame number
     :return: None or Sequence[tuple[int, int, int]]
     """
+    step = 8
+    rgb_state = [255, 0, 0]
 
-    def running_function(increment_channel, decrement_channel):
+    async def running_function(increment_channel, decrement_channel):
         for _ in range(step):
             rgb_state[increment_channel] += 255 // step
             rgb_state[decrement_channel] -= 255 // step
             yield tuple(rgb_state)
 
     transitions = (
-        running_function(increment_channel=1, decrement_channel=0),
-        running_function(increment_channel=2, decrement_channel=1),
-        running_function(increment_channel=0, decrement_channel=2),
+        await running_function(increment_channel=1, decrement_channel=0),
+        await running_function(increment_channel=2, decrement_channel=1),
+        await running_function(increment_channel=0, decrement_channel=2),
     )
 
-    step = 8
-    rgb_state = [255, 0, 0]
     cycles = len(transitions) * step
-    _update_pattern_frame_amount("rainbow_cycle", cycles, returning)
+    await _update_pattern_frame_amount("rainbow_cycle", cycles, returning)
 
     if specific_frame is not None:
         # Calculate which transition and which step within that transition
@@ -231,13 +231,13 @@ def rainbow_cycle(delay=0.002, returning=False, specific_frame=None):
         if returning:
             return [frame] * NUM_PIXELS
 
-        update_multiple_pixels([frame] * NUM_PIXELS)
+        await update_multiple_pixels([frame] * NUM_PIXELS)
         return None
 
     for transition in transitions:
         for rgb_tuple in transition:
-            update_multiple_pixels([rgb_tuple] * NUM_PIXELS)
-            time.sleep(delay)
+            await update_multiple_pixels([rgb_tuple] * NUM_PIXELS)
+            await asyncio.sleep(delay)
     return None
 
 
@@ -281,7 +281,6 @@ async def rainbow_wave(delay=0.03, returning=False, specific_frame=None):
             g = int(sg + step_g * pixel)
             b = int(sb + step_b * pixel)
             gradient.append((r, g, b))
-            await asyncio.sleep(0.1)
         return gradient
 
     if specific_frame is not None:
@@ -305,12 +304,11 @@ async def rainbow_wave(delay=0.03, returning=False, specific_frame=None):
             await update_multiple_pixels(
                 await build_gradient(colour_sequence[i], colour_sequence[i + 1]), delay
             )
-            await asyncio.sleep(0.1)
         debug_print("WAVE FINISHED (2/2)")
     return None
 
 
-def rainbow_wave_improved(
+async def rainbow_wave_improved(
     delay=0.0, returning=False, num_iterations=NUM_PIXELS, specific_frame=None
 ):
     """
@@ -324,9 +322,9 @@ def rainbow_wave_improved(
     """
 
     cycles = num_iterations
-    _update_pattern_frame_amount("rainbow_wave_improved", cycles, returning)
+    await _update_pattern_frame_amount("rainbow_wave_improved", cycles, returning)
 
-    def generate_fixed_rainbow_gradient():
+    async def generate_fixed_rainbow_gradient():
         """
         Generate a complete rainbow gradient across the entire strip.
 
@@ -336,12 +334,12 @@ def rainbow_wave_improved(
         for led in range(NUM_PIXELS):
             # Normalize pixel position to create a smooth rainbow gradient
             hue = led / NUM_PIXELS
-            r, g, b = hsv_to_rgb(hue, 1.0, 1.0)
+            r, g, b = await hsv_to_rgb(hue, 1.0, 1.0)
             update_list.append((int(r * 255), int(g * 255), int(b * 255)))
 
         return update_list
 
-    def hsv_to_rgb(hue: float, saturation: float, value: float) -> tuple:
+    async def hsv_to_rgb(hue: float, saturation: float, value: float) -> tuple:
         """
         Convert HSV color space to RGB.
 
@@ -376,7 +374,7 @@ def rainbow_wave_improved(
             return value, lowest_component, mid_low_component
 
     # Generate the initial rainbow gradient
-    rainbow_gradient = generate_fixed_rainbow_gradient()
+    rainbow_gradient = await generate_fixed_rainbow_gradient()
 
     # If specific frame is requested
     if specific_frame is not None:
@@ -386,9 +384,9 @@ def rainbow_wave_improved(
 
     if not returning:
         for _ in range(num_iterations):
-            update_multiple_pixels(rainbow_gradient)
+            await update_multiple_pixels(rainbow_gradient)
             rainbow_gradient = rainbow_gradient[1:] + rainbow_gradient[:1]
-            time.sleep(delay)
+            await asyncio.sleep(delay)
 
     return None
 
@@ -427,7 +425,6 @@ async def sparkle_pixels(
     ):
         random_pixel = random.randint(0, NUM_PIXELS - 1)
         pixel_list[random_pixel] = colour
-        await asyncio.sleep(0.1)
 
     if specific_frame is not None or returning:
         return pixel_list
@@ -456,7 +453,6 @@ CURRENT_PATTERN_INDEX = 0
 async def pattern_runner(pattern_func):
     while True:
         await pattern_func()
-        await asyncio.sleep(0.01)
 
         if not button.value:
             break
@@ -468,14 +464,13 @@ async def main():
         debug_print("BEGINNING OF WHILE LOOP (1/2)")
         current_pattern = PATTERNS[CURRENT_PATTERN_INDEX]
 
+        debug_print(f"Switched to pattern: {current_pattern.__name__}")
+
         await pattern_runner(current_pattern)
 
         if not button.value:
-            await asyncio.sleep(0.2)  # Debounce delay
-            CURRENT_PATTERN_INDEX = (CURRENT_PATTERN_INDEX + 1) % len(PATTERNS)
-            debug_print(f"Switched to pattern: {current_pattern.__name__}")
-
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.2)
+            CURRENT_PATTERN_INDEX = (CURRENT_PATTERN_INDEX + 1) % (len(PATTERNS)-1)
 
         debug_print("END OF WHILE LOOP (2/2)")
 
