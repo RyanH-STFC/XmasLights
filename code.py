@@ -101,7 +101,7 @@ def turn_black(delay=1.0):
 
 
 # pylint: disable = too-many-arguments, too-many-positional-arguments
-def merge_patterns(
+async def merge_patterns(
     pattern_a_funct,
     pattern_b_funct,
     mode="default",
@@ -125,7 +125,7 @@ def merge_patterns(
 
     debug_print(f"Pattern A {pattern_a_funct}, " f"Pattern B {pattern_b_funct}")
 
-    def _default_funct(pattern_1, pattern_2):
+    async def _default_funct(pattern_1, pattern_2):
         out = []
         for i in range(NUM_PIXELS - 1):
             value_1 = pattern_1[i]
@@ -136,7 +136,7 @@ def merge_patterns(
                 out.append(value_2)
         return out
 
-    def _combine_funct(pattern_1, pattern_2, sway):
+    async def _combine_funct(pattern_1, pattern_2, sway):
         out = []
 
         # Ensure sway is between 0 and 1
@@ -159,27 +159,27 @@ def merge_patterns(
     while True:
         # create and cache previous patterns
 
-        pattern_a_frame = pattern_a_funct(
+        pattern_a_frame = await pattern_a_funct(
             delay=0,
             specific_frame=index % pattern_frame_amounts[pattern_a_funct.__name__],
             returning=True,
         )
-        pattern_b_frame = pattern_b_funct(
+        pattern_b_frame = await pattern_b_funct(
             delay=0,
             specific_frame=index % pattern_frame_amounts[pattern_b_funct.__name__],
             returning=True,
         )
 
         if mode == "default":
-            update_multiple_pixels(
+            await update_multiple_pixels(
                 _default_funct(pattern_a_frame, pattern_b_frame), pace
             )
         if mode == "combine":
-            update_multiple_pixels(
+            await update_multiple_pixels(
                 _combine_funct(pattern_a_frame, pattern_b_frame, sway), pace
             )
 
-        time.sleep(delay)
+        await asyncio.sleep(delay)
         index += 1
 
         if pattern_a_frame == pattern_a_funct(
@@ -301,7 +301,7 @@ async def rainbow_wave(delay=0.03, returning=False, specific_frame=None):
         gradient_index = specific_frame % total_gradients
 
         # Build the specific gradient
-        current_gradient = build_gradient(
+        current_gradient = await build_gradient(
             colour_sequence[gradient_index], colour_sequence[gradient_index + 1]
         )
 
@@ -455,6 +455,7 @@ async def sparkle_pixels(
 # rainbow_cycle()
 
 PATTERNS = [
+    merge_patterns,
     red,
     green,
     sparkle_pixels,
@@ -464,6 +465,15 @@ PATTERNS = [
 ]
 CURRENT_PATTERN_INDEX = 0
 
+MERGE_PARAMS = [
+    #(rainbow_cycle, rainbow_wave_improved, "combine", 0.2),
+    (sparkle_pixels, rainbow_cycle),
+    #(rainbow_cycle, rainbow_wave, "combine", 0.2),
+    #(sparkle_pixels, rainbow_wave_improved),
+    #(rainbow_wave_improved, sparkle_pixels, "combine", 0.2),
+    #(sparkle_pixels, rainbow_wave)
+]
+CURRENT_MERGE_INDEX = 0
 
 async def pattern_runner(pattern_func):
     """
@@ -471,12 +481,16 @@ async def pattern_runner(pattern_func):
     :param pattern_func: function to run
     :return:
     """
+    global CURRENT_MERGE_INDEX
     while True:
-        await pattern_func()
+        if pattern_func == merge_patterns:
+            await pattern_func(*MERGE_PARAMS[CURRENT_MERGE_INDEX])
+            CURRENT_MERGE_INDEX = (CURRENT_MERGE_INDEX + 1) % (len(MERGE_PARAMS) - 1)
+        else:
+            await pattern_func()
 
         if not button.value:
             break
-
 
 async def main():
     """
