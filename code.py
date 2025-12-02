@@ -479,6 +479,10 @@ async def pattern_runner(pattern_func):
 
 
 async def main():
+    """
+    Main running function
+    :return: None
+    """
     # pylint: disable = global-statement
     global CURRENT_PATTERN_INDEX
 
