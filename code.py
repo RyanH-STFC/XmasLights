@@ -23,6 +23,7 @@ button.pull = digitalio.Pull.UP
 pattern_frame_amounts = {}
 DEBUG_PRINT = True
 
+
 def debug_print(msg, new_line=True):
     """
     Prints messages to stdout. for debugging purposes.
@@ -36,11 +37,14 @@ def debug_print(msg, new_line=True):
     elif DEBUG_PRINT:
         print(msg.upper())
 
+
 async def red():
     return strip.fill((250, 0, 0))
 
+
 async def green():
     return strip.fill((0, 250, 0))
+
 
 # pylint: disable = consider-iterating-dictionary
 async def _update_pattern_frame_amount(key, cycles, returning=True):
@@ -413,7 +417,9 @@ async def sparkle_pixels(
     :return: None or Sequence[tuple[int, int, int]]
     """
 
-    await _update_pattern_frame_amount("sparkle_pixels", (cycles * 3) / cycles, returning)
+    await _update_pattern_frame_amount(
+        "sparkle_pixels", (cycles * 3) / cycles, returning
+    )
 
     # If specific_frame is not None or returning is True, generate the pixel list without updating
     # Create a pixel list for this cycle
@@ -450,12 +456,14 @@ PATTERNS = [
 ]
 CURRENT_PATTERN_INDEX = 0
 
+
 async def pattern_runner(pattern_func):
     while True:
         await pattern_func()
 
         if not button.value:
             break
+
 
 async def main():
     global CURRENT_PATTERN_INDEX
@@ -470,9 +478,10 @@ async def main():
 
         if not button.value:
             await asyncio.sleep(0.2)
-            CURRENT_PATTERN_INDEX = (CURRENT_PATTERN_INDEX + 1) % (len(PATTERNS)-1)
+            CURRENT_PATTERN_INDEX = (CURRENT_PATTERN_INDEX + 1) % (len(PATTERNS) - 1)
 
         debug_print("END OF WHILE LOOP (2/2)")
+
 
 asyncio.run(main())
 
