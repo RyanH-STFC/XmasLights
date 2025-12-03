@@ -194,7 +194,6 @@ async def rainbow_cycle(delay=0.002, returning=False, specific_frame=None):
     Rainbow cycle with option to generate a specific frame.
     """
     step = 8
-    rgb_state = [255, 0, 0]
 
     def running_function(increment_channel, decrement_channel):
         rgb_state_local = [255, 0, 0]
@@ -416,7 +415,6 @@ async def sparkle_pixels(
     delay=0.33,
     colour=(255, 255, 255),
     intensity=0.33,
-    cycles: int = 4,
     returning=False,
     specific_frame=None,
 ):
@@ -427,7 +425,6 @@ async def sparkle_pixels(
     :param colour: Tuple[int, int, int],     RGB colour. default is white (255,255,255)
     :param intensity: float,    Percentage of pixels to light up. default is 0.5
      (50% of amount of pixels at a max)
-    :param cycles: int,    Number of sparkle cycles, default is 3.0
     :param returning: bool,    Whether to return the list of cycles
     :param specific_frame: int, generate only a specific frame number
     :return: None or Sequence[tuple[int, int, int]]
@@ -468,6 +465,7 @@ async def sparkle_pixels(
 # rainbow_wave_improved()
 # rainbow_cycle()
 
+# pylint: disable = invalid-name
 PATTERNS = [
     red,
     green,
@@ -496,11 +494,13 @@ async def pattern_runner(pattern_func):
     :param pattern_func: function to run
     :return:
     """
+    # pylint: disable = global-statement, comparison-with-callable
     global CURRENT_MERGE_INDEX
     while True:
         if pattern_func == merge_patterns:
             await pattern_func(*MERGE_PARAMS[CURRENT_MERGE_INDEX])
-            CURRENT_MERGE_INDEX = (CURRENT_MERGE_INDEX + 1) % (len(MERGE_PARAMS))
+
+            CURRENT_MERGE_INDEX = (CURRENT_MERGE_INDEX + 1) % len(MERGE_PARAMS)
         else:
             await pattern_func()
 
