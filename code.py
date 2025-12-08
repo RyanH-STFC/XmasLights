@@ -9,6 +9,7 @@ import asyncio
 import board
 import neopixel
 import digitalio
+import math
 
 PIXEL_PIN = board.GP16
 PIXEL_BRIGHTNESS = 0.05
@@ -81,6 +82,10 @@ async def update_multiple_pixels(updates, pace=0.0):
     :return: None or List[tuple[int, int, int]]
     """
     debug_print(f"List to be updated:  {updates[0:10]}...")
+
+    if pace <= 0:
+        strip[:] = updates
+        return None
     for index, colour in enumerate(updates):
         strip[index] = colour
         if not button.value:
@@ -107,7 +112,7 @@ async def merge_patterns(
     pattern_b_funct,
     mode="default",
     sway=0.5,
-    delay=0.0,
+    delay=0.3,
     pace=0.0,
 ):
     """
@@ -116,7 +121,7 @@ async def merge_patterns(
 
     def _default_funct(pattern_1, pattern_2):
         out = []
-        for i in range(NUM_PIXELS - 1):
+        for i in range(NUM_PIXELS):
             value_1 = pattern_1[i]
             value_2 = pattern_2[i]
             if value_1 == (0, 0, 0):
@@ -131,7 +136,7 @@ async def merge_patterns(
         # Ensure sway is between 0 and 1
         sway = max(0.01, min(sway, 0.99))
 
-        for i in range(NUM_PIXELS - 1):
+        for i in range(NUM_PIXELS):
             value_1 = tuple(int(num * sway) for num in pattern_1[i])
             value_2 = tuple(int(num * (1 - sway)) for num in pattern_2[i])
 
@@ -181,6 +186,8 @@ async def merge_patterns(
         if pattern_a_frame == check_a_frame and pattern_b_frame == check_b_frame:
             break
 
+        print(index)
+
         if not button.value:
             debug_print("getting sent back, button value press.")
             return None
@@ -189,45 +196,130 @@ async def merge_patterns(
         index += 1
 
 
-async def rainbow_cycle(delay=0.002, returning=False, specific_frame=None):
+async def christmas_colours(delay=0.65, returning=False, specific_frame=None):
+    """
+    Christmas-themed color cycle with slow, smooth brightness pulsing
+    independent of color cycling.
+    """
+
+    christmas_colors = [
+        (139, 0, 0),  # Deep Red
+        (0, 100, 0),  # Dark Green
+        (255, 0, 0),  # Bright Red
+        (0, 128, 0),  # Green
+        (255, 255, 255),  # White
+        (255, 140, 0),  # Dark Orange
+        (0, 255, 0),  # Bright Green
+        (220, 20, 60),  # Crimson
+        (255, 69, 0),  # Red-Orange
+        (255, 215, 0),  # Gold
+    ]
+
+    color_cycles = 60  # original color rotation speed
+    brightness_cycles = color_cycles  # NEW: slow breathing brightness
+    await _update_pattern_frame_amount("christmas_colours", color_cycles, returning)
+
+    def compute_brightness(frame):
+        # Slow breathing curve (cosine gives long dim time)
+        phase = (frame % brightness_cycles) / brightness_cycles
+        brightness = (1 - math.cos(phase * math.pi * 2)) / 2
+        brightness = brightness * 0.9 + 0.1
+        return brightness
+
+    # If a specific frame is requested
+    if specific_frame is not None:
+        if specific_frame < 0 or specific_frame >= color_cycles:
+            debug_print(
+                f"Invalid frame {specific_frame}. Max frames: {color_cycles - 1}"
+            )
+            return None
+
+        brightness = compute_brightness(specific_frame)
+        frame_colors = []
+
+        for i in range(NUM_PIXELS):
+            base_color = christmas_colors[(specific_frame + i) % len(christmas_colors)]
+            frame_color = tuple(int(c * brightness) for c in base_color)
+            frame_colors.append(frame_color)
+
+        if returning:
+            return frame_colors
+
+        await update_multiple_pixels(frame_colors)
+        return None
+
+    # Full animation loop
+    for frame in range(color_cycles):
+        brightness = compute_brightness(frame)
+        frame_colors = []
+
+        for i in range(NUM_PIXELS):
+            base_color = christmas_colors[(frame + i) % len(christmas_colors)]
+            frame_color = tuple(int(c * brightness) for c in base_color)
+            frame_colors.append(frame_color)
+
+        await update_multiple_pixels(frame_colors)
+
+        if delay > 0:
+            await asyncio.sleep(delay)
+
+        if not button.value:
+            debug_print("Interrupted by button press.")
+            return None
+
+    return None
+
+
+async def rainbow_cycle(delay=0.05, returning=False, specific_frame=None):
     """
     Rainbow cycle with option to generate a specific frame.
     """
-    step = 8
 
-    def running_function(increment_channel, decrement_channel):
-        rgb_state_local = [255, 0, 0]
+    step = 127  # steps per transition
+
+    # Proper transitions with correct starting values
+    TRANSITION_STARTS = [
+        (254, 0, 0),  # R → G
+        (0, 254, 0),  # G → B
+        (0, 0, 254),  # B → R
+    ]
+
+    TRANSITION_DIRS = [
+        (1, 0),  # increase G, decrease R
+        (2, 1),  # increase B, decrease G
+        (0, 2),  # increase R, decrease B
+    ]
+
+    def running_function(start_rgb, inc, dec):
+        rgb = list(start_rgb)
         for _ in range(step):
-            rgb_state_local[increment_channel] += 255 // step
-            rgb_state_local[decrement_channel] -= 255 // step
-            yield tuple(rgb_state_local)
+            rgb[inc] += 254 / step
+            rgb[dec] -= 254 / step
+            yield tuple(rgb)
 
-    # Recreate transitions each time to avoid generator exhaustion
     def create_transitions():
-        return (
-            running_function(increment_channel=1, decrement_channel=0),
-            running_function(increment_channel=2, decrement_channel=1),
-            running_function(increment_channel=0, decrement_channel=2),
-        )
+        return [
+            running_function(TRANSITION_STARTS[i], *TRANSITION_DIRS[i])
+            for i in range(3)
+        ]
 
-    cycles = 3 * step  # Number of transitions * steps per transition
-    await _update_pattern_frame_amount("rainbow_cycle", cycles, returning)
+    total_frames = 3 * step
+    await _update_pattern_frame_amount("rainbow_cycle", total_frames, returning)
 
+    # -----------------------
+    #   SPECIFIC FRAME
+    # -----------------------
     if specific_frame is not None:
-        # Calculate which transition and which step within that transition
-        total_step = step
-        transition_index = specific_frame // total_step
-        frame_in_transition = specific_frame % total_step
 
-        # Recreate transitions to ensure we can generate the specific frame
+        # wrap around so index is always valid
+        specific_frame = specific_frame % (3 * step)
+
+        transition_index = specific_frame // step
+        frame_in_transition = specific_frame % step
+
         transitions = create_transitions()
+        current_transition = transitions[transition_index]
 
-        # Advance to the correct transition
-        for _ in range(transition_index):
-            next(transitions[_ % len(transitions)])
-
-        # Generate the specific frame in the current transition
-        current_transition = transitions[transition_index % len(transitions)]
         for _ in range(frame_in_transition + 1):
             frame = next(current_transition)
 
@@ -237,21 +329,25 @@ async def rainbow_cycle(delay=0.002, returning=False, specific_frame=None):
         await update_multiple_pixels([frame] * NUM_PIXELS)
         return None
 
-    # Recreate transitions for the full cycle
+    # -----------------------
+    #   FULL CYCLE
+    # -----------------------
     transitions = create_transitions()
 
     for transition in transitions:
         for rgb_tuple in transition:
+
             await update_multiple_pixels([rgb_tuple] * NUM_PIXELS)
             await asyncio.sleep(delay)
 
             if not button.value:
-                debug_print("getting sent back, button value press.")
+                debug_print("getting sent back, button press")
                 return None
+
     return None
 
 
-async def rainbow_wave(delay=0, returning=False, specific_frame=None):
+async def rainbow_wave(delay=0.01, returning=False, specific_frame=None):
     """
     Creates a wave of rainbow gradient colours.
 
@@ -412,7 +508,7 @@ async def rainbow_wave_improved(
 
 # pylint: disable = too-many-arguments, too-many-positional-arguments
 async def sparkle_pixels(
-    delay=0.33,
+    delay=0.5,
     colour=(255, 255, 255),
     intensity=0.33,
     returning=False,
@@ -459,32 +555,39 @@ async def sparkle_pixels(
     return None
 
 
-# All functions that work
-# sparkle_pixels()
-# rainbow_wave()
-# rainbow_wave_improved()
-# rainbow_cycle()
-
 # pylint: disable = invalid-name
 PATTERNS = [
-    red,
     green,
+    christmas_colours,
     sparkle_pixels,
     rainbow_cycle,
     rainbow_wave,
     rainbow_wave_improved,
     merge_patterns,
+    red,
 ]
 CURRENT_PATTERN_INDEX = 0
 
 MERGE_PARAMS = [
-    (rainbow_cycle, rainbow_wave_improved, "combine", 0.5),
-    # (sparkle_pixels, rainbow_cycle),
-    # (rainbow_cycle, rainbow_wave, "combine", 0.9),
-    # (sparkle_pixels, rainbow_wave_improved),
-    # (rainbow_wave_improved, sparkle_pixels, "combine", 0.2),
-    # (sparkle_pixels, rainbow_wave),
+    # Combine modes
+    (christmas_colours, rainbow_cycle, "combine", 0.5, 0.45),
+    (sparkle_pixels, rainbow_cycle),
+    (christmas_colours, rainbow_wave, "combine", 0.4, 0.5),
+    (sparkle_pixels, rainbow_wave_improved),
+    (christmas_colours, rainbow_wave_improved, "combine", 0.6),
+    (rainbow_wave_improved, sparkle_pixels, "combine", 0.3),
+    (christmas_colours, sparkle_pixels, "combine", 0.6),
+    (rainbow_cycle, rainbow_wave, "combine", 0.5),
+    (rainbow_cycle, rainbow_wave_improved, "combine", 0.6),
+    (sparkle_pixels, rainbow_wave),
+    (rainbow_cycle, sparkle_pixels, "combine", 0.4),
+    (sparkle_pixels, christmas_colours),
+    (rainbow_wave, rainbow_wave_improved, "combine", 0.7),
+    (rainbow_wave_improved, christmas_colours, "combine", 0.4),
+    (rainbow_wave, sparkle_pixels, "combine", 0.5),
 ]
+
+
 CURRENT_MERGE_INDEX = 0
 
 
@@ -498,14 +601,21 @@ async def pattern_runner(pattern_func):
     global CURRENT_MERGE_INDEX
     while True:
         if pattern_func == merge_patterns:
-            await pattern_func(*MERGE_PARAMS[CURRENT_MERGE_INDEX])
+            for param in MERGE_PARAMS:
+                await pattern_func(*param)
+                strip.fill((0, 155, 155))
+                time.sleep(0.88)
 
             CURRENT_MERGE_INDEX = (CURRENT_MERGE_INDEX + 1) % len(MERGE_PARAMS)
+
         else:
             await pattern_func()
 
         if not button.value:
             break
+
+    strip.fill((0, 155, 155))
+    time.sleep(0.88)
 
 
 async def main():
